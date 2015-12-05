@@ -1,7 +1,4 @@
 module Santa
-  RE_NAUGHTY_SEQUENCES = /ab|cd|pq|xy/
-  RE_DOUBLE_LETTERS = /([a-z])\1/
-  RE_VOWELS = /[aeiou]/
 
   def self.load_words
     IO.readlines("./05.txt").map(&:strip)
@@ -16,9 +13,7 @@ module Santa
   end
 
   def self.naughty_or_nice?(str)
-    if has_naughty_sequences?(str)
-      :naughty
-    elsif has_two_in_a_row?(str) && has_enough_vowels?(str)
+    if has_repeated_pair?(str) && has_letter_sandwich?(str)
       :nice
     else
       :naughty
@@ -27,16 +22,12 @@ module Santa
 
   private
 
-  def self.has_enough_vowels?(str)
-    str.scan(RE_VOWELS).count > 2
+  def self.has_repeated_pair?(str)
+    /(..).*\1/.match str
   end
 
-  def self.has_naughty_sequences?(str)
-    RE_NAUGHTY_SEQUENCES.match(str)
-  end
-
-  def self.has_two_in_a_row?(str)
-    RE_DOUBLE_LETTERS.match(str)
+  def self.has_letter_sandwich?(str)
+    /(.).\1/.match str
   end
 
 end
