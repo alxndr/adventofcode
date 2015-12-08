@@ -37,30 +37,29 @@ defmodule Santa do
   end
 
   def handle(lights_map, "turn on", key) do
-    Map.put(lights_map, key, true)
+    previous_value = get(lights_map, key)
+    Map.put(lights_map, key, previous_value + 1)
   end
   def handle(lights_map, "turn off", key) do
-    Map.put(lights_map, key, false)
+    previous_value = get(lights_map, key)
+    new_value = if previous_value - 1 < 0, do: 0, else: previous_value - 1
+    Map.put(lights_map, key, new_value)
   end
   def handle(lights_map, "toggle", key) do
-    Map.put(lights_map, key, !Map.get(lights_map, key, false))
+    previous_value = get(lights_map, key)
+    Map.put(lights_map, key, previous_value + 2)
   end
 
+  def get(map, key), do: Map.get(map, key, 0)
+
   def count(lights_map) do
-    Enum.count(lights_map, &is_value_true?/1)
+    Enum.reduce(lights_map, 0, fn({_key, brightness}, sum) -> sum + brightness end)
   end
 
   def extract_coords(coords) do
     coords
     |> String.split(",")
     |> Enum.map(&String.to_integer/1)
-  end
-
-  defp is_value_true?({_k, val}) when val == true or val == false, do: val
-  defp is_value_true?(otherwise) do
-    IO.puts "uh oh what is this"
-    IO.inspect otherwise
-    true
   end
 
 end
