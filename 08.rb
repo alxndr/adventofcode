@@ -1,0 +1,1 @@
+IO.readlines("./08.txt").map{|s| ss = s.strip; {chars: ss.size, size: (eval ss).length}  }.reduce({chars: 0, size: 0}) { |acc, elem| {chars: acc[:chars] + elem[:chars], size: acc[:size] + elem[:size] } }
