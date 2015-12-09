@@ -40,18 +40,16 @@ mapp = lines.
   sort.
   map{ |distance, route| [distance, route.split(" to ").sort] }
 
-puts (0..9999).
-  map { generate_route(mapp.clone) }.
-  compact.
-  sort{ |(dA, _r), (dB, _r)| dA.<=>(dB) }.
-  map{ |distance, route| "#{distance}: #{route.inspect}" }.
-  join("\n")
+shortest_distance = mapp.reduce(0) { |acc, (distance, _)| acc + distance.to_i }
+shortest_route = nil
 
-# 155: ["Arbre", "Norrath", "Straylight", "Faerun", "Snowdin", "Tambi", "AlphaCentauri", "Tristram"]
-# 155: ["Arbre", "Norrath", "Straylight", "Faerun", "Snowdin", "Tambi", "AlphaCentauri", "Tristram"]
-# 157: ["Arbre", "Tambi", "Snowdin", "Faerun", "Straylight", "Norrath", "Tristram", "AlphaCentauri"]
-# 177: ["Norrath", "Straylight", "AlphaCentauri", "Tristram", "Faerun", "Snowdin", "Tambi", "Arbre"]
-# 162: ["AlphaCentauri", "Tristram", "Tambi", "Snowdin", "Faerun", "Straylight", "Norrath", "Arbre"]
-# 173: ["Faerun", "Snowdin", "Tambi", "Arbre", "Norrath", "Straylight", "Tristram", "AlphaCentauri"]
-# 185: ["Arbre", "Tristram", "AlphaCentauri", "Tambi", "Snowdin", "Faerun", "Straylight", "Norrath"]
-# 185: ["AlphaCentauri", "Tristram", "Straylight", "Faerun", "Snowdin", "Tambi", "Arbre", "Norrath"]
+begin
+  distance, route = generate_route(mapp.clone)
+  next unless distance && route
+  # puts distance, route.inspect
+  if distance < shortest_distance
+    shortest_distance = distance
+    shortest_route = route
+    puts "#{distance}: #{route.inspect}"
+  end
+end while true
