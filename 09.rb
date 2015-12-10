@@ -13,8 +13,11 @@ def generate_route(the_map)
     # keep track of iterations...
     count += 1
 
-    # pick a route which includes wherever we currently are
-    distance, (pointA, pointB) = next_route = the_map.shuffle.find{ |distance, (pointA, pointB)| pointA == currently_at || pointB == currently_at}
+    # pick a route which includes wherever we currently are, and a destination we haven't visited
+    distance, (pointA, pointB) = the_map.shuffle.find{ |_distance, (pointA, pointB)|
+      (pointA == currently_at && remaining_places.include?(pointB)) ||
+      (pointB == currently_at && remaining_places.include?(pointA))
+    }
 
     # identify where we're going
     currently_at = pointA == currently_at ? pointB : pointA
@@ -35,14 +38,13 @@ def generate_route(the_map)
 end
 
 lines = IO.readlines("09.txt").map(&:strip)
-mapp = lines.
-  reduce({}) { |acc, elem|
-    where, howfar = elem.split(" = ")
-    acc[howfar] = where
-    acc
-  }.
-  sort.
-  map{ |distance, route| [distance, route.split(" to ").sort] }
+mapp = lines
+  .map { |route|
+    where, howfar = route.split(" = ")
+    pointA, pointB = where.split(" to ")
+    [howfar, [pointA, pointB]]
+  }
+  .sort
 
 shortest_distance = mapp.reduce(0) { |acc, (distance, _)| acc + distance.to_i }
 shortest_route = nil
