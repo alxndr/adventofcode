@@ -1,31 +1,35 @@
 # -*- coding: utf-8 -*-
 require "pry"
 
-def generate_route(m)
-  places = m.map{ |_distance, route| route }.flatten.sort.uniq
+def generate_route(the_map)
+  places = the_map.map{ |_distance, route| route }.flatten.sort.uniq
   currently_at = places.shuffle[0]
   visited = [currently_at]
   remaining_places = places - [currently_at]
   distance_traveled = 0
 
   count = 0
-  while remaining_places.length >= 1 && count < 10 && distance_traveled < 155 do
+  while distance_traveled < 155 && remaining_places.length > 0 && count < 25 do
+    # keep track of iterations...
     count += 1
-    # puts "#{distance_traveled} @ #{currently_at} ... #{remaining_places}"
-    distance, (pointA, pointB) = next_route = m.shuffle.find{ |distance, (pointA, pointB)|
-      (pointA == currently_at and !visited.include?(pointB)) or
-      (pointB == currently_at and !visited.include?(pointA))
-    }
-    return nil unless next_route
-    m.delete next_route
+
+    # pick a route which includes wherever we currently are
+    distance, (pointA, pointB) = next_route = the_map.shuffle.find{ |distance, (pointA, pointB)| pointA == currently_at || pointB == currently_at}
+
+    # identify where we're going
     currently_at = pointA == currently_at ? pointB : pointA
-    # puts "\t #{distance} → #{currently_at}"
+
+    # go there
     visited.push currently_at
+
+    # count how far it was
     distance_traveled += distance.to_i
+
+    # note that we don't need to go there still
     remaining_places -= [currently_at]
   end
 
-  if visited.sort == places
+  if places.all?{ |place| visited.include? place }
     return distance_traveled, visited
   end
 end
