@@ -9,7 +9,7 @@ def generate_route(the_map)
   distance_traveled = 0
 
   count = 0
-  while distance_traveled < 155 && remaining_places.length > 0 && count < 25 do
+  while remaining_places.length > 0 && count < 10 do
     # keep track of iterations...
     count += 1
 
@@ -46,16 +46,16 @@ mapp = lines
   }
   .sort
 
-shortest_distance = mapp.reduce(0) { |acc, (distance, _)| acc + distance.to_i }
-shortest_route = nil
+longest_distance = 0
+longest_route = nil
 
 begin
   distance, route = generate_route(mapp.clone)
   next unless distance && route
   # puts distance, route.inspect
-  if distance < shortest_distance
-    shortest_distance = distance
-    shortest_route = route
+  if distance > longest_distance
+    longest_distance = distance
+    longest_route = route
     puts "#{distance}: #{route.inspect}"
   end
 end while true
