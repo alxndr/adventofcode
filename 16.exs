@@ -22,28 +22,27 @@ defmodule AuntDetector do
   end
 
   def build_map(aunt_lines) do
-    IO.puts "building aunts_and_stats_list..."
     Enum.reduce(aunt_lines, [], fn (aunt_line, aunts_and_stats_list) ->
       aunt_stats = Regex.named_captures(@regex_aunt_stat_line, aunt_line)
       [ aunt_stats | aunts_and_stats_list ]
-      # |> IO.inspect
     end)
   end
 
   def look_for_things(aunt_and_stats_list, looking_for \\ @looking_for) do
     Enum.filter(aunt_and_stats_list, fn (aunt_stats) ->
-      IO.inspect aunt_stats
       attribute1 = String.to_atom(aunt_stats["stat1"])
       attribute2 = String.to_atom(aunt_stats["stat2"])
       attribute3 = String.to_atom(aunt_stats["stat3"])
-      cond do
-        looking_for[attribute1] != String.to_integer(aunt_stats["quantity1"]) -> false
-        looking_for[attribute2] != String.to_integer(aunt_stats["quantity2"]) -> false
-        looking_for[attribute3] != String.to_integer(aunt_stats["quantity3"]) -> false
-        true -> true
-      end
-      |> IO.inspect
+      quantity1 = String.to_integer(aunt_stats["quantity1"])
+      quantity2 = String.to_integer(aunt_stats["quantity2"])
+      quantity3 = String.to_integer(aunt_stats["quantity3"])
+      works?(looking_for[attribute1], quantity1) &&
+        works?(looking_for[attribute2], quantity2) &&
+        works?(looking_for[attribute3], quantity3)
     end)
   end
+
+  defp works?(required_value, testing_value) when required_value == testing_value, do: true
+  defp works?(_required_value, _testing_value), do: false
 
 end
