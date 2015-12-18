@@ -36,13 +36,19 @@ defmodule AuntDetector do
       quantity1 = String.to_integer(aunt_stats["quantity1"])
       quantity2 = String.to_integer(aunt_stats["quantity2"])
       quantity3 = String.to_integer(aunt_stats["quantity3"])
-      works?(looking_for[attribute1], quantity1) &&
-        works?(looking_for[attribute2], quantity2) &&
-        works?(looking_for[attribute3], quantity3)
+      works?(attribute1, looking_for[attribute1], quantity1) &&
+        works?(attribute2, looking_for[attribute2], quantity2) &&
+        works?(attribute3, looking_for[attribute3], quantity3)
     end)
   end
 
-  defp works?(required_value, testing_value) when required_value == testing_value, do: true
-  defp works?(_required_value, _testing_value), do: false
+  defp works?(type, required_value, testing_value) when (type == :cats or type == :trees) do
+    required_value < testing_value
+  end
+  defp works?(type, required_value, testing_value) when (type == :pomeranians or type == :goldfish) do
+    required_value > testing_value
+  end
+  defp works?(type, required_value, testing_value) when required_value == testing_value, do: true
+  defp works?(_type, _required_value, _testing_value), do: false
 
 end
