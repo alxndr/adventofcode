@@ -2,29 +2,33 @@ import {readFile} from '../helpers.file.mjs'
 
 const data = (await readFile('./input.txt')).split(/\n+/)
 
-const result = data.reduce((pos, command) => {
-  const [direction, distanceStr] = command.split(' ')
-  const distance = Number(distanceStr)
+const result = data.reduce(({aim, depth, horiz}, command) => {
+  const [direction, valueStr] = command.split(' ')
+  const value = Number(valueStr)
   switch (direction) {
     case 'forward':
       return {
-        ...pos,
-        horiz: pos.horiz + distance,
+        aim,
+        depth: depth + (aim * value),
+        horiz: horiz + value,
       }
     case 'down':
       return {
-        ...pos,
-        depth: pos.depth + distance,
+        aim: aim + value,
+        depth,
+        horiz,
       }
     case 'up':
       return {
-        ...pos,
-        depth: pos.depth - distance,
+        aim: aim - value,
+        depth,
+        horiz,
       }
     default:
       throw new Error(`unexpected direction: "${direction}"`)
   }
 }, {
+  aim: 0,
   horiz: 0,
   depth: 0,
 })
