@@ -1,63 +1,56 @@
 import {readFile} from '../helpers.file.mjs'
 
-const data = (await readFile('./input.txt')).split(/\n+/)
-// const data = (await readFile('./input-short.txt')).split(/\n+/)
-global.console.log('input length:', data.length)
-
-function filterByIthBit(bitstring, i, value) {
-  return bitstring.slice(i, i+1) === value
-}
-
-function calculateFrequencies(input, nthBit) {
+function partitionByBitFrequency(input, nthBit) {
   return input.reduce((acc, row) => {
     if (!(row?.length)) return acc
     const bit = row.slice(nthBit, nthBit + 1)
     return {
-      '0': bit === '0' ? acc['0']+1 : acc['0'],
-      '1': bit === '1' ? acc['1']+1 : acc['1'],
+      '0': bit === '0' ? acc['0'].concat(input) : acc['0'],
+      '1': bit === '1' ? acc['1'].concat(input) : acc['1'],
     }
-  }, {'0': 0, '1': 0})
-} // TODO new implementation: partition the input by first-char, then let calling fn decide what to do with larger list
+  }, {'0': [], '1': []})
+}
 
-function filterByMostCommonBit(data, bit) {
+function analyzeBitMostCommon(data, bit) {
   if (data?.length === 1) return data
-  const bitFrequency = calculateFrequencies(data, bit)
-  return data.filter(row => filterByIthBit(row, bit, bitFrequency['0'] > bitFrequency['1'] ? '0' : '1'))
+  const partitioned = partitionByBitFrequency(data, bit)
+  if (partitioned['0'].length > partitioned['1'].length)
+    return data.filter(datum => datum.slice(bit, bit+1) === '0')
+  return data.filter(datum => datum.slice(bit, bit+1) === '1')
 }
 
-function filterByLeastCommonBit(data, bit) {
+function analyzeBitLeastCommon(data, bit) {
   if (data?.length === 1) return data
-  const bitFrequency = calculateFrequencies(data, bit)
-  return data.filter(row => filterByIthBit(row, bit, bitFrequency['0'] < bitFrequency['1'] ? '0' : '1'))
+  const partitioned = partitionByBitFrequency(data, bit)
+  if (partitioned['0'].length > partitioned['1'].length)
+    return data.filter(datum => datum.slice(bit, bit+1) === '1')
+  return data.filter(datum => datum.slice(bit, bit+1) === '0')
 }
 
-function oxygen(data) {
-  const inputRecordLength = data?.[0]?.length
-  let dataset = data
-  for (
-    let bit = 0;
-    bit < inputRecordLength;
-    bit++
-  ) {
-    dataset = filterByMostCommonBit(dataset, bit)
-  }
-  return dataset
+function getOxRatingRecursive(data, bit) {
+  if (bit > data[0].length) return data
+  if (data.length === 1) return data
+  return getOxRatingRecursive(analyzeBitMostCommon(data, bit), bit + 1)
 }
 
-function carbondioxide(data) {
-  const inputRecordLength = data?.[0]?.length
-  let dataset = data
-  for (
-    let bit = 0;
-    bit < inputRecordLength;
-    bit++
-  ) {
-    dataset = filterByLeastCommonBit(dataset, bit)
-  }
-  return dataset
+
+function getCarbonRatingRecursive(data, bit) {
+  if (bit > data[0].length) return data
+  if (data.length === 1) return data
+  return getCarbonRatingRecursive(analyzeBitLeastCommon(data, bit), bit + 1)
 }
 
-const oTwo = parseInt(oxygen(data), 2),
-  coTwo = parseInt(carbondioxide(data), 2)
 
-global.console.log({'O2': oTwo, 'CO2': coTwo, rating: oTwo * coTwo})
+const data = (await readFile('./input.txt')).split(/\n+/).filter(Boolean)
+// const data = (await readFile('./input-short.txt')).split(/\n+/).filter(Boolean)
+global.console.log('input length:', data.length)
+
+const ox = getOxRatingRecursive(data, 0)
+const oxDec = parseInt(ox[0], 2)
+global.console.log('ox decimal', oxDec)
+
+const co = getCarbonRatingRecursive(data, 0)
+const coDec = parseInt(co[0], 2)
+global.console.log('co2 decimal', coDec)
+
+global.console.log('multiplied', oxDec * coDec)
