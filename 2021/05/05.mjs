@@ -1,6 +1,6 @@
 import {readFile} from '../helpers.file.mjs'
 
-const data = (await readFile('./input.txt')).split(/\n/)
+const data = (await readFile('./input-short.txt')).split(/\n/)
 
 /* data structure... array of arrays of integers
  * can grow as we see bigger numbers
@@ -16,7 +16,11 @@ function zeroes(howMany) {
 
 function rangeIntegersInclusive(a, b) {
   const howMany = Math.abs(a - b) + 1
-  return Array(howMany).fill(null).map((_, i) => (a > b ? b : a) + i)
+  const empty = Array(howMany).fill(null)
+  if (a > b) {
+    return empty.map((_, i) => b + i)
+  }
+  return empty.map((_, i) => a + i)
 }
 
 function sum(a, b) {
@@ -27,33 +31,37 @@ function coordinatesShareDimension({aX, aY, bX, bY}) {
   return aX === bX || aY === bY
 }
 function coordinatesAreSquare({aX, aY, bX, bY}) {
-  return aX === bY && aY === bX
+  return (aX === bY && aY === bX) ||
+    (aX === aY && bX === bY)
 }
 
 function Field() {
   // size of field will grow as segments are added
   const rows = [[0]] // corresponds to X direction, sub-array elements vary in Y direction
   function addSegment({aX, aY, bX, bY}) {
-    if (coordinatesShareDimension({aX, aY, bX, bY}) || coordinatesAreSquare({aX, aY, bX, bY})) {
-      global.console.log('adding...', `{${aX},${aY}:${bX},${bY}}`)
-      growField({aX, aY, bX, bY})
-      const colRange = rangeIntegersInclusive(aX, bX)
-      const rowRange = rangeIntegersInclusive(aY, bY)
-      if (colRange.length > 1 && rowRange.length > 1) {
-        console.assert(colRange.length === rowRange.length, 'ruh roh............')
-        // diagonal
-        colRange.forEach((_, index) => {;
-          rows[rowRange[0]+index][colRange[0]+index] += 1
-        })
-      } else {
-        // only one of them beter be 1-length
-        rowRange.forEach(row => {
-          colRange.forEach(col => {
-            rows[row][col] += 1
-          })
-        })
-      }
+    if (!(coordinatesShareDimension({aX, aY, bX, bY}) || coordinatesAreSquare({aX, aY, bX, bY}))) {
+      global.console.log('not gonna touch em', ({aX, aY, bX, bY}))
+      return
     }
+    global.console.log('adding...', `{${aX},${aY}:${bX},${bY}}`)
+    growField({aX, aY, bX, bY})
+    const colRange = rangeIntegersInclusive(aX, bX)
+    const rowRange = rangeIntegersInclusive(aY, bY)
+    if (colRange.length > 1 && rowRange.length > 1) {
+      console.assert(colRange.length === rowRange.length, 'ruh roh............')
+      // diagonal
+      colRange.forEach((_, index) => {
+        rows[rowRange[index]][colRange[index]] += 1
+      })
+    } else {
+      // only one of them beter be 1-length
+      rowRange.forEach(row => {
+        colRange.forEach(col => {
+          rows[row][col] += 1
+        })
+      })
+    }
+    global.console.log(this.asString, '\n')
   }
   function growField({aX, aY, bX, bY}) {
     const maxX = Math.max(aX, bX),
@@ -88,5 +96,5 @@ const field = data.reduce((f, line) => {
   return f
 }, new Field())
 
-global.console.log(field.asString)
+// global.console.log(field.asString)
 global.console.log('overlapping points', field.numOverlapping)
