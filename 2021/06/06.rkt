@@ -1,18 +1,18 @@
 #lang racket
 
-(define process
-  (lambda (line dataset)
-    dataset))
+(define Fish
+  (lambda (timer)
+    (quasiquote (F (unquote timer)))))
 
-(define loop ; recurses until current-input-port is empty
-  (lambda (dataset)
-    (let ([line (read-line (current-input-port))])
-      (if (eof-object? line)
-        dataset ; end recursion
-        (loop (process line dataset))))))
+(define create-fish
+  (lambda (numbers fishes)
+    (if (null? numbers)
+      fishes
+      (create-fish (cdr numbers) (cons (Fish (car numbers)) fishes)))
+    ))
 
-(define initial-dataset
-  '())
-
-(let* ([processed-data (loop initial-dataset)])
-  processed-data)
+(let* ([line (read-line (current-input-port))] ; only need to look at the first line of input
+       [fishes (reverse (create-fish (string-split line ",") '()))]
+       )
+  (printf "fishes... ~a~n" fishes)
+  )
