@@ -106,25 +106,32 @@ function extractBoards(rows) {
   return boards
 }
 
-const boards = extractBoards(data.slice(2))
+let boards = extractBoards(data.slice(2))
+let lastWinner
 
-let winner = false
-let limiter = 50
-while (limiter-- > 0 && !winner) {
+let limiter = 200
+while (limiter-->0 && boards.length) {
   const nextDraw = draws.shift()
-  if (!winner && nextDraw) {
+  if (nextDraw) {
     global.console.log('drawing...', nextDraw)
-    boards.forEach(board => {
-      const result = board.mark(nextDraw)
-      if (!winner && result) {
-        winner = board
-        global.console.log('Winner!')
-        global.console.log(board.asString)
+    if (boards.length === 1) {
+      const isWinner = boards[0].mark(nextDraw)
+      if (isWinner) {
+        lastWinner = boards.pop()
+        global.console.log('last winner!')
+        global.console.log(lastWinner.score)
       }
-    })
+    } else {
+      boards = boards.filter(board => {
+        const isWinner = board.mark(nextDraw)
+        if (isWinner) {
+          global.console.log('Winner!')
+          global.console.log(board.asString)
+        }
+        return !isWinner
+      })
+    }
   }
 }
-if (!winner)
-  throw new Error('no winner')
 
-global.console.log(`winning board's score: ${winner.score}`)
+global.console.log(lastWinner.asString)
