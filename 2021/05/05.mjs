@@ -23,23 +23,37 @@ function sum(a, b) {
   return a + b
 }
 
+function coordinatesShareDimension({aX, aY, bX, bY}) {
+  return aX === bX || aY === bY
+}
+function coordinatesAreSquare({aX, aY, bX, bY}) {
+  return aX === bY && aY === bX
+}
+
 function Field() {
   // size of field will grow as segments are added
   const rows = [[0]] // corresponds to X direction, sub-array elements vary in Y direction
   function addSegment({aX, aY, bX, bY}) {
-    // "For now, only consider horizontal and vertical lines: lines where either x1 = x2 or y1 = y2."
-    if (aX !== bX && aY !== bY) {
-      return
+    if (coordinatesShareDimension({aX, aY, bX, bY}) || coordinatesAreSquare({aX, aY, bX, bY})) {
+      global.console.log('adding...', `{${aX},${aY}:${bX},${bY}}`)
+      growField({aX, aY, bX, bY})
+      const colRange = rangeIntegersInclusive(aX, bX)
+      const rowRange = rangeIntegersInclusive(aY, bY)
+      if (colRange.length > 1 && rowRange.length > 1) {
+        console.assert(colRange.length === rowRange.length, 'ruh roh............')
+        // diagonal
+        colRange.forEach((_, index) => {;
+          rows[rowRange[0]+index][colRange[0]+index] += 1
+        })
+      } else {
+        // only one of them beter be 1-length
+        rowRange.forEach(row => {
+          colRange.forEach(col => {
+            rows[row][col] += 1
+          })
+        })
+      }
     }
-    global.console.log('adding...', `{${aX},${aY}:${bX},${bY}}`)
-    growField({aX, aY, bX, bY})
-    const colRange = rangeIntegersInclusive(aX, bX)
-    const rowRange = rangeIntegersInclusive(aY, bY)
-    rowRange.forEach(row => {
-      colRange.forEach(col => {
-        rows[row][col] = rows[row][col] + 1
-      })
-    })
   }
   function growField({aX, aY, bX, bY}) {
     const maxX = Math.max(aX, bX),

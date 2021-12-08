@@ -64,3 +64,6 @@ You still need to determine the number of points where at least two lines overla
 
 Consider all of the lines. At how many points do at least two lines overlap?
 ```
+
+6521 too low
+
