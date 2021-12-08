@@ -1,6 +1,6 @@
 import {readFile} from '../helpers.file.mjs'
 
-const data = (await readFile('./input-short.txt')).split(/\n/)
+const data = (await readFile('./input.txt')).split(/\n/)
 
 /* data structure... array of arrays of integers
  * can grow as we see bigger numbers
@@ -17,10 +17,10 @@ function zeroes(howMany) {
 function rangeIntegersInclusive(a, b) {
   const howMany = Math.abs(a - b) + 1
   const empty = Array(howMany).fill(null)
-  if (a > b) {
-    return empty.map((_, i) => b + i)
-  }
-  return empty.map((_, i) => a + i)
+  const numbers = empty.map(a < b
+    ? (_, i) => a + i
+    : (_, i) => b + i)
+  return a < b ? numbers : numbers.reverse()
 }
 
 function sum(a, b) {
@@ -31,8 +31,7 @@ function coordinatesShareDimension({aX, aY, bX, bY}) {
   return aX === bX || aY === bY
 }
 function coordinatesAreSquare({aX, aY, bX, bY}) {
-  return (aX === bY && aY === bX) ||
-    (aX === aY && bX === bY)
+  return Math.abs(aX - bX) === Math.abs(aY - bY)
 }
 
 function Field() {
@@ -47,10 +46,13 @@ function Field() {
     growField({aX, aY, bX, bY})
     const colRange = rangeIntegersInclusive(aX, bX)
     const rowRange = rangeIntegersInclusive(aY, bY)
+    // global.console.log({colRange, rowRange})
     if (colRange.length > 1 && rowRange.length > 1) {
       console.assert(colRange.length === rowRange.length, 'ruh roh............')
-      // diagonal
+      // implement each diagonal separately.........
+      // ...no this should work for both cases, if teh ranges are in the right order
       colRange.forEach((_, index) => {
+        // global.console.log({r: rowRange[index], c: colRange[index]})
         rows[rowRange[index]][colRange[index]] += 1
       })
     } else {
@@ -61,7 +63,7 @@ function Field() {
         })
       })
     }
-    global.console.log(this.asString, '\n')
+    // global.console.log(this.asString, '\n')
   }
   function growField({aX, aY, bX, bY}) {
     const maxX = Math.max(aX, bX),
