@@ -1,31 +1,33 @@
 import {readFile} from '../helpers.file.mjs'
 
-function Fish(initTimer) {
-  this.timer = initTimer
-  this.tick = function() {
-    if (!this.timer) {
-      this.timer = 6
-      return true // tack on a new Fish
-    }
-    --this.timer
-  }
-}
-Fish.prototype.toString = function() { return `Fish:${this.timer}`}
+const numDays = 190 // JS Heap running out of memory a little above this
 
+function stepper(n) {
+  return n ? --n : [6, 8]
+}
 function day(fishes) {
-  const newFish = fishes.filter((fish) => fish.tick()).map(() => new Fish(8))
-  return fishes.concat(newFish)
+  return fishes.flatMap(stepper)
 }
 
-function days(n, fishes) { // recursive
-  if (!n) return fishes
-  return days(n - 1, day(fishes))
+function days(n, fishes, memo) { // recursive
+  if (!n) {
+    return memo
+  }
+  const family = day(fishes)
+  if (n <= 9) // only need the last chunk of values that will be calculated...
+    memo[numDays - (n - 1)] = family.length
+  return days(n - 1, family, memo)
 }
 
-const data = (await readFile('./input.txt')).split(/\n/)[0].split(',')
+const memo = days(numDays, [0], [])
+global.console.log(memo.map((n, index) => `${index}: ${n}`))
 
-let fishes = data.map(numStr => new Fish(Number(numStr)))
+const input = (await readFile('./input-short.txt')).split(/\n/)[0].split(',')
 
-fishes = days(80, fishes)
-global.console.log('how many fishes', fishes.length)
-// global.console.log(fishes.map(f => f.toString()))
+function findFamSize(initTimer, days) {
+  return initTimer
+    ? memo[numDays - initTimer]
+    : memo[numDays]
+}
+const totalPopulation = input.reduce((sum, initTimer) => sum + findFamSize(initTimer, numDays), 0)
+global.console.log({input, numDays, totalPopulation})
