@@ -1,25 +1,46 @@
 import {readFile} from '../helpers.file.mjs'
+const input = (await readFile('./input.txt')).split(/\n/)[0].split(',')
 
-const numDays = 196 // JS Heap running out of memory above 196
+// what if we calculate days to numDays/2
+// then go through the `family` and sum the population for each member of the fam after a second period of numDays/2 days
+
+const numDays = 512
 
 function stepper(n) {
   return n ? --n : [6, 8]
 }
-let memo = []
-function days(n, fishes) { // recursive; mutates `memo`
-  if (!n) {
-    return memo
-  }
-  const family = fishes.flatMap(stepper)
-  if (n <= 9) // only need the last chunk of values that will be calculated...
-    memo[numDays - (n - 1)] = family.length
-  return days(n - 1, family)
+
+function growFamilyMemoizedRecursing({day, end, family, memo}) {
+  if (day > end)
+    return [family, memo]
+  const nextGeneration = family.flatMap(stepper)
+  memo[day] = nextGeneration
+  return growFamilyMemoizedRecursing({day: ++day, end, family: nextGeneration, memo})
 }
-
-days(numDays, [0])
-global.console.log(memo.map((n, index) => `${index}: ${n}`))
-
-const input = (await readFile('./input-short.txt')).split(/\n/)[0].split(',')
-
-const totalPopulation = input.reduce((sum, initTimer) => sum + memo[numDays - initTimer], 0)
-global.console.log({inputSize: input.length, numDays, totalPopulation})
+function growFamilyMemoized(days) {
+  return growFamilyMemoizedRecursing({day: 1, end: days, family: [0], memo: []})
+}
+let start = Date.now()
+const offset = numDays % 2
+const halfTheTimePeriod = Math.floor(numDays/2) + offset
+const [family0, memo0] = growFamilyMemoized(halfTheTimePeriod) // this is the family tree of a single Fish0
+// global.console.log(`after ${halfTheTimePeriod} days, single Fish0 has ${family0.length} descendants`)
+// global.console.log(memo0.filter(i => i >= halfTheTimePeriod - 8).map((m, i) => `#${i}: ${m}`).join('\n'))
+// const summedPopulation = family
+//   .map(gen25memberTimer => {
+//     const index = (halfTheTimePeriod - offset) - (gen25memberTimer)
+//     // global.console.log({fishTimer: gen25memberTimer, index, descendants: memo0[index]?.length})
+//     return memo0[index].length
+//   }).reduce((a, b) => a + b, offset ? 0 : 0)
+// global.console.log({summedPopulation})
+const halfTimePeriodFamily = input.reduce((descendants, initTimer) => {
+  const index = halfTheTimePeriod - offset - initTimer
+  // global.console.log({initTimer, index, descendants: memo0[index]})
+  return descendants.concat(memo0[index])
+}, [])
+const descendantPopulation = halfTimePeriodFamily.reduce((sum, initTimer) => {
+  const index = halfTheTimePeriod - offset - initTimer
+  // global.console.log({initTimer, index, descendants: memo0[index]})
+  return sum + memo0[index].length
+}, 0)
+global.console.log({seconds: (Date.now() - start)/1000, inputSize: input.length, numDays, descendants: descendantPopulation})

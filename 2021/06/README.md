@@ -61,3 +61,5 @@ After 256 days in the example above, there would be a total of 26984457539 lante
 How many lanternfish would there be after 256 days?
 ```
 
+too low: 6703087164
+just right: 1682576647495
