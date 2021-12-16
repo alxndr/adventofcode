@@ -1,5 +1,5 @@
 import {readFile} from '../helpers.file.mjs'
-const input = (await readFile('./input.txt')).split(/\n/).slice(-1)
+const input = (await readFile('./input.txt')).split(/\n/).slice(-2)
 global.console.log(input[0])
 
 // "mixed up separately for each four-digit display"
@@ -12,7 +12,8 @@ const outputNumbers = (input.filter(Boolean).map((inputLine) => {
   // segments[8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
   const byLength = [] // element is (array of) signals which are as long as the index value
   const mapping = {} // final results... single-letter segment: key is correct output segment, value is scrambled input; signal string: key is scrambled input, value is corresponding numerical value
-  function reckon() {
+  function reckon(quit = false) {
+    if (quit) return
     if (!segments[0] && mapping.D && segments[8]) {
       // if no segments[0] but we do have mapping.D, subtract it from segments for 8
       const stringForZero = segments[8].filter(segmentInEight => segmentInEight !== mapping.D).join('')
@@ -32,7 +33,7 @@ const outputNumbers = (input.filter(Boolean).map((inputLine) => {
       const signalForThree = byLength[5].find(signalString => signalString !== segments[2].join('') && signalString !== segments[5].join(''))
       segments[mapping[signalForThree] = 3] = signalForThree.split('')
     }
-    if (!segments[3] && byLength[5]?.length === 3 && segments[2] && segments[5]) {
+    if (!segments[3] && segments[2] && segments[5]) {
       const signalForThree = byLength[5].find(signalFiveLong => signalFiveLong !== segments[2].join('') && signalFiveLong !== segments[5].join(''))
       segments[mapping[signalForThree] = 3] = signalForThree.split('')
       // remove from list of byLength possibilies:
@@ -40,7 +41,6 @@ const outputNumbers = (input.filter(Boolean).map((inputLine) => {
       // // removing byLength[5] entirely now...
       // delete byLength[5]
     }
-    // if (!segments[3] && )
     if (!segments[5] && byLength[5]?.length === 3 && mapping.C) {
       const stringForFive = byLength[5].find(signalString => !signalString.includes(mapping.C))
       if (stringForFive) {
@@ -105,6 +105,7 @@ const outputNumbers = (input.filter(Boolean).map((inputLine) => {
       const twoSegments = segments[5].filter(segmentInFive => !segments[4].includes(segmentInFive))
       mapping.G = twoSegments.find(segment => segment !== mapping.A)
     }
+    reckon(true)
   }
   function record(n, signal) { // mutates `segments` and `mapping` and then calls `reckon`
     segments[mapping[signal] = n] = signal.split('')
@@ -137,6 +138,7 @@ const outputNumbers = (input.filter(Boolean).map((inputLine) => {
     }
     if (mapping.hasOwnProperty(outputSignal))
       return mapping[outputSignal]
+    // if (outputSignal.split('').every(signalLetter => Object.value()))
     global.console.log('oh no...', outputSignal, mapping)
     return outputSignal
   }))
