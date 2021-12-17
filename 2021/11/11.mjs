@@ -11,8 +11,6 @@ function formatGarden(garden) {
 }
 
 let octopusGarden = input.map(line => line.split('').map(Number))
-global.console.log('starting point...')
-global.console.log(formatGarden(octopusGarden))
 
 function matrixMap(matrix, callback) {
   return matrix.map(row => row.map(callback))
@@ -21,14 +19,16 @@ function matrixMap(matrix, callback) {
 const LIMIT = 9
 
 function flash(garden) {
+  // "This process continues as long as new octopuses keep having their energy level increased beyond 9."
   if (!garden.find(row => row.find(octopus => octopus > LIMIT))) {
     // if none of the octos are > LIMIT, return garden
     return garden
   }
   garden.forEach((row, indexY) => row.forEach((octopus, indexX) => { // can mutate `garden`
     if (octopus > LIMIT) {
-      // flashing...
+      // "Then, any octopus with an energy level greater than 9 flashes. This increases the energy level of all adjacent octopuses by 1, including octopuses that are diagonally adjacent."
       // only increment neighbor if it exists and it's non-zero (as zeroes have just flashed within this step)
+      // "(An octopus can only flash at most once per step.)"
       if (garden[indexY-1]) {
         garden[indexY-1][indexX-1] && garden[indexY-1][indexX-1] <= LIMIT && garden[indexY-1][indexX-1]++
         garden[indexY-1][indexX  ] && garden[indexY-1][indexX  ] <= LIMIT && garden[indexY-1][indexX  ]++
@@ -44,30 +44,25 @@ function flash(garden) {
       }
     }
   }))
+  // "If this causes an octopus to have an energy level greater than 9, it also flashes."
   return flash(garden)
 }
 
 function step(garden) {
   // "First, the energy level of each octopus increases by 1."
-  const increasedEnergy = matrixMap(garden, (octopus) => ++octopus) // garden.map(row => row.map(octopus => ++octopus))
-  // "Then, any octopus with an energy level greater than 9 flashes. This increases the energy level of all adjacent octopuses by 1, including octopuses that are diagonally adjacent."
-  // "If this causes an octopus to have an energy level greater than 9, it also flashes."
-  // "This process continues as long as new octopuses keep having their energy level increased beyond 9."
-  // "(An octopus can only flash at most once per step.)"
-  return flash(increasedEnergy)
+  return flash(matrixMap(garden, (octopus) => ++octopus))
 }
-
-// import {createInterface} from 'readline'
-
-// const stdin = createInterface({input: process.stdin})
 
 const flashes = []
 
-for (let i = 0; i < 100; i++) {
+function isHomogenous(garden) {
+  return garden.map(row => row.reduce((firstVal, value) => value === firstVal && firstVal) || row[0])
+    .reduce((firstVal, value) => value === firstVal && firstVal) !== false
+}
+
+while (!isHomogenous(octopusGarden)) {
   octopusGarden = step(octopusGarden)
   flashes.push(octopusGarden.map(row => row.filter(n => n === 0).length).reduce((a, b) => a + b))
-  // global.console.log({step: flashes.length, sum: flashes.reduce((a, b) => a + b)}, flashes)
-  // global.console.log(formatGarden(octopusGarden))
 }
-global.console.log({step: flashes.length, sum: flashes.reduce((a, b) => a + b)}, flashes)
+global.console.log({step: flashes.length})
 global.console.log(formatGarden(octopusGarden))
