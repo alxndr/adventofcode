@@ -3,8 +3,6 @@ const input = (await readFile('./input.txt')).split(/\n/)
 
 // "A corrupted line is one where a chunk closes with the wrong character"
 
-const CORRUPTED = 'CORRUPTED'
-
 function isOpener(chr) {
   switch (chr) {
     case '(':
@@ -34,7 +32,7 @@ function isMatched(a, b) {
     || (a === '<' && b === '>')
 }
 
-function pointsFor(chr) {
+function syntaxPointsFor(chr) {
   switch (chr) {
     case ')': return 3
     case ']': return 57
@@ -45,7 +43,7 @@ function pointsFor(chr) {
 
 function Corruption(stack, chr) {
   global.console.log(`Corrupted entry... expected match for ${stack.slice(-1)?.[0]} but got ${chr}`)
-  this.points = pointsFor(chr)
+  this.points = syntaxPointsFor(chr)
 }
 
 const processed = input.map((inputLine) => {
@@ -59,14 +57,28 @@ const processed = input.map((inputLine) => {
       stack.pop()
       return stack
     }
-    // global.console.log('ruh roh', chr)
     return new Corruption(stack, chr)
   }, [])
   return parseResult
 })
-// global.console.log(processed)
-global.console.log('score',
-  processed
-  .filter(p => p instanceof Corruption)
-  .map(corruptedInfo => corruptedInfo.points)
-  .reduce((a, b) => a + b))
+
+function autocompletePointsForChar(chr) {
+  switch (chr) {
+    case '(': return 1
+    case '[': return 2
+    case '{': return 3
+    case '<': return 4
+    default: return 0
+  }
+}
+function autocompleteScoreForArray(arr) {
+  return arr.reduce((score, chr) => {
+    return score * 5 + autocompletePointsForChar(chr)
+  }, 0)
+}
+
+const incomplete = processed.filter(p => !(p instanceof Corruption))
+global.console.log('incomplete...', incomplete)
+const autocompleteScores = incomplete.map(i => autocompleteScoreForArray(i.reverse()))
+global.console.log('each score...', autocompleteScores)
+global.console.log('midpoint autocomplete score...', autocompleteScores.sort((a, b) => a - b)[Math.floor(autocompleteScores.length / 2)])
