@@ -26,6 +26,19 @@ const processedIntoArrays = input.reduce(({pointsArr, folds}, inputLine) => {
   }
 }, {pointsArr: [], folds: []})
 
+function draw(pointsArr) {
+  const maxRowLength = Math.max(...pointsArr.map(([x]) => x)) + 1
+  global.console.log(Array(maxRowLength).fill('-').join(''))
+  global.console.log(pointsIntoMatrix(pointsArr).map(row => {
+    let str = ''
+    for (let i = 0; i < maxRowLength; i++) {
+      str += row[i] ? '#' : ' '
+    }
+    return str + '|'
+  }).join('\n'))
+  global.console.log(Array(maxRowLength).fill('-').join(''))
+}
+
 const sum = (a, b) =>
   a + b
 const numPoints = (pointsArray) =>
@@ -43,27 +56,8 @@ function foldArr(pointsArr, [foldDir, axis]) {
   return pointsArr.reduce((foldedPoints, [pX, pY]) => [...foldedPoints, [transformation(pX), pY]], [])
 }
 
-global.console.log('one fold... before:', numPoints(processedIntoArrays.pointsArr), 'points')
-// draw(processedIntoArrays.pointsArr)
-const folded = foldArr(processedIntoArrays.pointsArr, processedIntoArrays.folds[0])
-global.console.log('after:', numPoints(folded), 'points')
-// draw(folded)
+const foldedArr = processedIntoArrays.folds.reduce((pointsArr, [foldDir, axis]) => {
+  return foldArr(pointsArr, [foldDir, axis])
+}, processedIntoArrays.pointsArr)
 
-// const foldedArr = processedIntoArrays.folds.reduce((pointsArr, [foldDir, axis]) => {
-//   const foldedArr = foldArr(pointsArr, [foldDir, axis])
-//   draw(foldedArr)
-//   return foldedArr
-// }, processedIntoArrays.pointsArr)
-
-function draw(pointsArr) {
-  const maxRowLength = Math.max(...pointsArr.map(([x]) => x)) + 1
-  global.console.log(Array(maxRowLength).fill('-').join(''))
-  global.console.log(pointsIntoMatrix(pointsArr).map(row => {
-    let str = ''
-    for (let i = 0; i < maxRowLength; i++) {
-      str += row[i] ? '#' : ' '
-    }
-    return str + '|'
-  }).join('\n'))
-  global.console.log(Array(maxRowLength).fill('-').join(''))
-}
+draw(foldedArr)
