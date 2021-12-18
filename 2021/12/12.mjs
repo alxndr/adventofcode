@@ -1,3 +1,5 @@
+// have to run using `--stack-size=4096` in order to get through the input file in NodeJS 17
+
 import {readFile} from '../helpers.file.mjs'
 const input = (await readFile('./input.txt')).split(/\n/)
 
