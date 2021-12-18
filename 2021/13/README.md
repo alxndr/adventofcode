@@ -1,3 +1,4 @@
+```
 --- Day 13: Transparent Origami ---
 You reach another volcanically active part of the cave. It would be nice if you could do some kind of thermal imaging so you could tell ahead of time which caves are too hot to safely enter.
 
@@ -100,4 +101,6 @@ The instructions made a square!
 The transparent paper is pretty big, so for now, focus on just completing the first fold. After the first fold in the example above, 17 dots are visible - dots that end up overlapping after the fold is completed count as a single dot.
 
 How many dots are visible after completing just the first fold instruction on your transparent paper?
+```
 
+666

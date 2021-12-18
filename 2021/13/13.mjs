@@ -1,8 +1,8 @@
 import {readFile} from '../helpers.file.mjs'
-const input = (await readFile('./input-a.txt')).split(/\n/)
+const input = (await readFile('./input.txt')).split(/\n/)
 
-function pointsIntoMatrix(points) {
-  return points.reduce((matrix, [x, y]) => {
+function pointsIntoMatrix(pointsArr) {
+  return pointsArr.reduce((matrix, [x, y]) => {
     if (!matrix[y])
       matrix[y] = []
     if (!matrix[y][x])
@@ -11,20 +11,20 @@ function pointsIntoMatrix(points) {
   }, [])
 }
 
-const processedIntoArrays = input.reduce(({points, folds}, inputLine) => {
+const processedIntoArrays = input.reduce(({pointsArr, folds}, inputLine) => {
   if (!inputLine.length)
-    return {points, folds}
+    return {pointsArr, folds}
   if (inputLine.includes(',')) {
     return {
-      points: [...points, inputLine.split(',').map(Number)],
+      pointsArr: [...pointsArr, inputLine.split(',').map(Number)],
       folds,
     }
   }
   return {
-    points,
+    pointsArr,
     folds: [...folds, inputLine.split(' ')[2].split('=')],
   }
-}, {points: [], folds: []})
+}, {pointsArr: [], folds: []})
 
 const sum = (a, b) =>
   a + b
@@ -33,10 +33,7 @@ const numPoints = (pointsArray) =>
     .map(row => row.filter(Boolean).length)
     .reduce(sum)
 
-drawPoints(processedIntoArrays.points)
-global.console.log('number of points...', numPoints(processedIntoArrays.points))
-
-function fold(pointsArr, foldDir, axis) {
+function foldArr(pointsArr, [foldDir, axis]) {
   global.console.log('folding...', {foldDir, axis})
   const transformation = (n) => n > axis ? axis - (n - axis) : n
   if (foldDir === 'y') { // horizontal axis, y-values to be modified
@@ -46,16 +43,22 @@ function fold(pointsArr, foldDir, axis) {
   return pointsArr.reduce((foldedPoints, [pX, pY]) => [...foldedPoints, [transformation(pX), pY]], [])
 }
 
-const foldedArr = processedIntoArrays.folds.reduce((pointsArr, [foldDir, axis]) => {
-  const foldedArr = fold(pointsArr, foldDir, axis)
-  drawPoints(foldedArr)
-  return foldedArr
-}, processedIntoArrays.points)
+global.console.log('one fold... before:', numPoints(processedIntoArrays.pointsArr), 'points')
+// draw(processedIntoArrays.pointsArr)
+const folded = foldArr(processedIntoArrays.pointsArr, processedIntoArrays.folds[0])
+global.console.log('after:', numPoints(folded), 'points')
+// draw(folded)
 
-function drawPoints(points) {
-  const maxRowLength = Math.max(...points.map(([x]) => x)) + 1
+// const foldedArr = processedIntoArrays.folds.reduce((pointsArr, [foldDir, axis]) => {
+//   const foldedArr = foldArr(pointsArr, [foldDir, axis])
+//   draw(foldedArr)
+//   return foldedArr
+// }, processedIntoArrays.pointsArr)
+
+function draw(pointsArr) {
+  const maxRowLength = Math.max(...pointsArr.map(([x]) => x)) + 1
   global.console.log(Array(maxRowLength).fill('-').join(''))
-  global.console.log(pointsIntoMatrix(points).map(row => {
+  global.console.log(pointsIntoMatrix(pointsArr).map(row => {
     let str = ''
     for (let i = 0; i < maxRowLength; i++) {
       str += row[i] ? '#' : ' '
@@ -64,5 +67,3 @@ function drawPoints(points) {
   }).join('\n'))
   global.console.log(Array(maxRowLength).fill('-').join(''))
 }
-
-// drawPoints(foldedArr)
