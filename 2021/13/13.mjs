@@ -1,7 +1,17 @@
 import {readFile} from '../helpers.file.mjs'
 const input = (await readFile('./input-a.txt')).split(/\n/)
 
-const processed = input.reduce(({points, folds}, inputLine) => {
+function pointsIntoMatrix(points) {
+  return points.reduce((matrix, [x, y]) => {
+    if (!matrix[y])
+      matrix[y] = []
+    if (!matrix[y][x])
+      matrix[y][x] = true
+    return matrix
+  }, [])
+}
+
+const processedIntoArrays = input.reduce(({points, folds}, inputLine) => {
   if (!inputLine.length)
     return {points, folds}
   if (inputLine.includes(',')) {
@@ -16,32 +26,43 @@ const processed = input.reduce(({points, folds}, inputLine) => {
   }
 }, {points: [], folds: []})
 
-const folded = processed.folds.reduce((points, [foldDir, axis]) => {
-  drawPoints(points)
+const sum = (a, b) =>
+  a + b
+const numPoints = (pointsArray) =>
+  pointsIntoMatrix(pointsArray)
+    .map(row => row.filter(Boolean).length)
+    .reduce(sum)
+
+drawPoints(processedIntoArrays.points)
+global.console.log('number of points...', numPoints(processedIntoArrays.points))
+
+function fold(pointsArr, foldDir, axis) {
+  global.console.log('folding...', {foldDir, axis})
   const transformation = (n) => n > axis ? axis - (n - axis) : n
   if (foldDir === 'y') { // horizontal axis, y-values to be modified
-    return points.reduce((foldedPoints, [pX, pY]) => [...foldedPoints, [pX, transformation(pY)]], [])
+    return pointsArr.reduce((foldedPoints, [pX, pY]) => [...foldedPoints, [pX, transformation(pY)]], [])
   }
   // vertical axis; x-values to be modified
-  return points.reduce((foldedPoints, [pX, pY]) => [...foldedPoints, [transformation(pX), pY]], [])
-}, processed.points)
-global.console.log('\n')
+  return pointsArr.reduce((foldedPoints, [pX, pY]) => [...foldedPoints, [transformation(pX), pY]], [])
+}
+
+const foldedArr = processedIntoArrays.folds.reduce((pointsArr, [foldDir, axis]) => {
+  const foldedArr = fold(pointsArr, foldDir, axis)
+  drawPoints(foldedArr)
+  return foldedArr
+}, processedIntoArrays.points)
 
 function drawPoints(points) {
   const maxRowLength = Math.max(...points.map(([x]) => x)) + 1
-  global.console.log(points.reduce((matrix, [x, y]) => {
-    if (!matrix[x])
-      matrix[x] = []
-    if (!matrix[x][y])
-      matrix[x][y] = true
-    return matrix
-  }, []).map(row => {
+  global.console.log(Array(maxRowLength).fill('-').join(''))
+  global.console.log(pointsIntoMatrix(points).map(row => {
     let str = ''
     for (let i = 0; i < maxRowLength; i++) {
       str += row[i] ? '#' : ' '
     }
-    return str
+    return str + '|'
   }).join('\n'))
+  global.console.log(Array(maxRowLength).fill('-').join(''))
 }
 
-drawPoints(folded)
+// drawPoints(foldedArr)
