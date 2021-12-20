@@ -55,23 +55,26 @@
       template
       (step-n-times (- n 1) (step template mapping) mapping))))
 
+(define find-and-add-one-r
+  (lambda (letter occurrences result)
+    (if (...something) ; TODO
+      result
+      (recursing...))))
 (define find-and-add-one
   (lambda (letter occurrences)
-    ))
+    (find-and-add-one-r letter occurrences "")))
 (define occurrences-of-each-letter
   (lambda (str occurrences)
     (if (eq? 0 (string-length str))
       occurrences
       (occurrences-of-each-letter (substring str 1)
                                   (find-and-add-one (substring str 0 1) occurrences)))))
-
 (define calc-stats
   (lambda (str)
     ; count occurrences of each letter in string
     (occurrences-of-each-letter str '())))
 
-(let* (
-       [template (read-line (current-input-port))] ; first line is automaton starting input
+(let* ([template (read-line (current-input-port))] ; first line is automaton starting input
        [_ (read-line (current-input-port))]        ; second line is blank
        [mapping (input-to-mapping current-input-port)]
        )
@@ -80,4 +83,5 @@
   (let* ([after-ten-steps (step-n-times 10 template mapping)]
          [letter-stats (calc-stats after-ten-steps)])
     (printf "after ten steps... ~a~n" (string-length after-ten-steps))
+    (printf "stats...~n~a~n~n" letter-stats)
     ))
