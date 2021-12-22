@@ -28,7 +28,6 @@
 
 (define step-r
   (lambda (template mapping result)
-    ; (printf "t:~a \t r:~a~n" template result)
     (if (eq? 1 (string-length template))
       ; at the last char of input string...
       (string-append result template) ; ...stick the last template char on to end of newly-generated string
@@ -47,7 +46,6 @@
 (define step
   (lambda (template mapping)
     (step-r template mapping "")))
-
 (define step-n-times
   (lambda (n template mapping)
     ; (printf "steppin ~a times... ~a~n" n template)
@@ -55,33 +53,58 @@
       template
       (step-n-times (- n 1) (step template mapping) mapping))))
 
-(define find-and-add-one-r
-  (lambda (letter occurrences result)
-    (if (...something) ; TODO
-      result
-      (recursing...))))
-(define find-and-add-one
-  (lambda (letter occurrences)
-    (find-and-add-one-r letter occurrences "")))
-(define occurrences-of-each-letter
-  (lambda (str occurrences)
+(define count-letters
+  (lambda (str hashtable)
     (if (eq? 0 (string-length str))
-      occurrences
-      (occurrences-of-each-letter (substring str 1)
-                                  (find-and-add-one (substring str 0 1) occurrences)))))
-(define calc-stats
+      hashtable
+      (let ([first-letter (substring str 0 1)])
+        (if (hash-has-key? hashtable first-letter)
+          (count-letters (substring str 1)
+                         (hash-set hashtable first-letter (+ 1 (hash-ref hashtable first-letter))))
+          (count-letters (substring str 1)
+                         (hash-set hashtable first-letter 1)))))))
+(define find-most-and-least-common
+  (lambda (letter-occurrences)
+    (foldl (lambda (pair data)
+             (let ([letter (car pair)]
+                   [count (cdr pair)])
+               (if (eq? '() data) ; on the first iteration; letter & count are both most and least common
+                 (quasiquote (((unquote count) . (unquote letter))
+                              .
+                              ((unquote count) . (unquote letter))))
+                 (let ([most-common-letter (car data)]
+                       [least-common-letter (cdr data)])
+                   (cond
+                     ((> count (car most-common-letter))
+                      (quasiquote (((unquote count) . (unquote letter))
+                                   .
+                                   (unquote least-common-letter))))
+                     ((< count (car least-common-letter))
+                      (quasiquote ((unquote most-common-letter)
+                                   .
+                                   ((unquote count) . (unquote letter)))))
+                     ('else data))))))
+           '()
+           (hash->list letter-occurrences))))
+(define print-stats
   (lambda (str)
-    ; count occurrences of each letter in string
-    (occurrences-of-each-letter str '())))
+    (let* ([letter-occurrences (count-letters str (hash))] ; TODO try using `make-hash` ?
+           [common (find-most-and-least-common letter-occurrences)]
+           [most-common (car common)]
+           [least-common (cdr common)])
+      (printf "Polymer length: ~a~n" (string-length str))
+      (printf "Most Common Letter: ~a (~a)~n" (cdr most-common) (car most-common))
+      (printf "Least Common Letter: ~a (~a)~n" (cdr least-common) (car least-common))
+      (printf "(difference: ~a)~n" (- (car most-common) (car least-common)))
+    )
+))
 
 (let* ([template (read-line (current-input-port))] ; first line is automaton starting input
-       [_ (read-line (current-input-port))]        ; second line is blank
-       [mapping (input-to-mapping current-input-port)]
-       )
+       [_        (read-line (current-input-port))] ; second line is blank
+       [mapping  (input-to-mapping current-input-port)]) ; rest of input are rules to create a mapping
   (printf "mapping ~a~n" mapping)
   (printf "template ~a~n" template)
-  (let* ([after-ten-steps (step-n-times 10 template mapping)]
-         [letter-stats (calc-stats after-ten-steps)])
-    (printf "after ten steps... ~a~n" (string-length after-ten-steps))
-    (printf "stats...~n~a~n~n" letter-stats)
-    ))
+  (let* ([after-ten-steps (step-n-times 10 template mapping)])
+    (printf "after ten steps...~n")
+    (print-stats after-ten-steps)
+))
