@@ -1,67 +1,66 @@
 #lang racket/base
 
-(define build-mapping
-  (lambda (mapping input)
+(define convert-to-symbols-r ; returns list of symbols in reverse order from input string
+  (lambda (str list-of-symbols)
+    (if (eq? 0 (string-length str))
+      list-of-symbols
+      (convert-to-symbols-r (substring str 1)
+                            (cons (string->symbol (substring str 0 1))
+                                  list-of-symbols)))))
+
+(define build-mapping-r ; returns a hash
+  (lambda (hsh input)
     (let ([line (read-line (input))])
       (if (eof-object? line)
-        mapping
-        (let* ([pair (substring line 0 2)]
-               [infix (substring line 6 7)])
-          (build-mapping (cons (cons pair (cons infix '())) mapping) input))))))
-(define input-to-mapping
-  (lambda (input-port)
-    (build-mapping '() input-port)))
-(define look-up
-  (lambda (pair mapping)
-    (if (null? mapping)
-      #f
-      (let* ([first-mapping (car mapping)]
-             [first-pair (car first-mapping)]
-             [first-infix (car (cdr first-mapping))])
-        (if (equal? pair first-pair)
-          first-infix
-          (look-up pair (cdr mapping)))))))
+        hsh
+        (let* ([letter1 (string->symbol (substring line 0 1))]
+               [letter2 (string->symbol (substring line 1 2))]
+               [infix (string->symbol (substring line 6 7))])
+          (build-mapping-r
+            (hash-set hsh
+                      `(,letter2 ,letter1) ; this is "backwards" cause template-lists are backwards
+                      infix)
+            input))))))
+(define look-up ; returns infix for given pair if found in given mapping, else `#g`
+  (lambda (pair hash)
+    ; (printf "look-up... pair: ~a~n" pair)
+    (hash-ref hash pair #f)
+    ))
 
-(define step-r ; TODO reimplement without using strings
-  (lambda (template mapping result)
-    (if (eq? 1 (string-length template))
-      ; at the last char of input string...
-      (string-append result template) ; ...stick the last template char on to end of newly-generated string
-      ; ...otherwise, first 2 chars of template are pair to look up in mapping
-      (let* ([pair (substring template 0 2)]
-             [infix (look-up pair mapping)])
+(define step-r ; returns template-list; recursive
+  (lambda (template hash result)
+    ; (printf "template ~a~n" template)
+    ; (printf "hash ~a~n" hash)
+    ; (printf "result ~a~n" result)
+    (if (eq? 1 (length template))
+      (cons (car template) result)
+      (let* ([first (car template)]
+             [second (car (cdr template))]
+             [pair `(,second ,first)] ; backwards cause the template list is backwards
+             [infix (look-up pair hash)])
+        ; (printf "step...  ~a  ~n" pair)
         (if (eq? infix #f)
-          ; if no infix, add only 1st char to result and recurse
-          (step-r (substring template 1)
-                  mapping
-                  (string-append result (substring template 0 1)))
-          ; if infix is found, add 1st char plus infix to result and recurse
-          (step-r (substring template 1)
-                  mapping
-                  (string-append result (substring template 0 1) infix)))))))
-(define step
-  (lambda (template mapping)
-    (step-r template mapping "")))
-(define step-n-times
-  (lambda (n template mapping)
-    (let ([len (string-length template)])
-      (if (> len 9e4)
-        (printf "remaining iterations: ~a \t string length: ~a~n" n (string-length template))
-        #f))
+          (step-r (cdr template) hash (cons first result))
+          (step-r (cdr template) hash (cons first (cons infix result))))))))
+(define step-multiple-r ; returns template-list after running `n` steps; recursive
+  (lambda (n template hash)
+    (printf "~a\t~a~n" n template)
+    ; TODO refactor to special-case for n = 1 : calculate letter occurences as pass through template is done (thereby avoiding iteration over the last/largest value)
     (if (eq? n 0)
       template
-      (step-n-times (- n 1) (step template mapping) mapping))))
+      (step-multiple-r (- n 1)
+                       (step-r (reverse template) hash '())
+                       hash))))
 
-(define count-letters
-  (lambda (str hashtable)
-    (if (eq? 0 (string-length str))
+(define count-letters-r
+  (lambda (template hashtable)
+    ; (printf "counting.. ~a~n" hashtable)
+    (if (eq? '() template)
       hashtable
-      (let ([first-letter (substring str 0 1)])
-        (if (hash-has-key? hashtable first-letter)
-          (count-letters (substring str 1)
-                         (hash-set hashtable first-letter (+ 1 (hash-ref hashtable first-letter))))
-          (count-letters (substring str 1)
-                         (hash-set hashtable first-letter 1)))))))
+      (begin
+        (hash-update! hashtable (car template) add1 0)
+        (count-letters-r (cdr template)
+                         hashtable)))))
 (define find-most-and-least-common
   (lambda (letter-occurrences)
     (foldl
@@ -69,6 +68,7 @@
         (let ([letter (car pair)]
               [count (cdr pair)])
           (if (eq? '() data) ; on the first iteration; letter & count are both most and least common
+            ; TODO rewrite using ` and ,
             (quasiquote (((unquote count) . (unquote letter)) . ((unquote count) . (unquote letter))))
             (let ([most-common-letter (car data)]
                   [least-common-letter (cdr data)])
@@ -81,22 +81,23 @@
       '()
       (hash->list letter-occurrences))))
 (define print-stats
-  (lambda (str)
-    (printf "Polymer length: ~a~n" (string-length str))
-    (let* ([letter-occurrences (count-letters str (hash))] ; `hash` is the immutable one
+  (lambda (template-list)
+    (printf "Polymer length: ~a~n" (length template-list))
+    (let* ([letter-occurrences (count-letters-r template-list (make-hash))]
            [common (find-most-and-least-common letter-occurrences)]
            [most-common (car common)]
            [least-common (cdr common)])
       (printf "Most Common Letter: ~a (~a)~n" (cdr most-common) (car most-common))
       (printf "Least Common Letter: ~a (~a)~n" (cdr least-common) (car least-common))
-      (printf "(difference: ~a)~n" (- (car most-common) (car least-common)))
-    )))
+      (printf "\t(difference: ~a)~n" (- (car most-common) (car least-common)))
+      )))
 
-(let* ([template (read-line (current-input-port))] ; first line is automaton starting input
+(let* ([template (convert-to-symbols-r (read-line (current-input-port)) '())] ; first line is automaton starting input
        [_        (read-line (current-input-port))] ; second line is blank
-       [mapping  (input-to-mapping current-input-port)]) ; rest of input are rules to create a mapping
-  (printf "mapping ~a~n" mapping)
+       [hash     (build-mapping-r (hash) current-input-port)]) ; rest of input are rules to create a mapping
+  (printf "mapping ~a~n" hash)
+  (printf "template ~a~n" template)
   (time
     (print-stats (time
-                   (step-n-times 10 template mapping)))))
+                   (step-multiple-r 2 template hash)))))
 ; multi-minute results for more than 17 iterations...
