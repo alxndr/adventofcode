@@ -17,17 +17,12 @@ BEGIN {
 # $2: string of rounds (semicolon-separated)
 {
   GAME_ID = $1; sub(/[^0-9]+/, "", GAME_ID)
-  printf "\n%3d game%3d… ", FNR, GAME_ID
+  printf "\ngame%3d… ", GAME_ID
   VALID = 1
   split($2, COLOR_PAIRS, /[,;] /)
-  if (length(COLOR_PAIRS) < 1) {
-    print "⚠️  ⚠️  ⚠️  no color pairs??"
-  }
+  if (length(COLOR_PAIRS) < 1) print "⚠️  ⚠️  ⚠️  no color pairs??"
   for (I = 1; I <= length(COLOR_PAIRS); I++) {
     split(COLOR_PAIRS[I], PAIR, " ")
-    if (length(PAIR[3])) {
-      print "⚠️  ⚠️  ⚠️  wtfffffff" PAIR[3] "???"
-    }
     INT_COUNT = PAIR[1]
     STR_COLOR = PAIR[2]
     if (INT_COUNT > CONTENTS[STR_COLOR]) {
@@ -38,11 +33,10 @@ BEGIN {
     printf "%s:%d ", substr(STR_COLOR, 1, 1), INT_COUNT
   }
   if (VALID) {
-    SUM_IDS += FNR # GAME_ID
+    SUM_IDS += GAME_ID
     printf "\n\tnew SUM_IDS:%5d", SUM_IDS
   }
 }
 END {
   print "\n\nSUM_IDS = " SUM_IDS
-  # 2858 too high...
 }
