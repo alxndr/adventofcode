@@ -23,7 +23,7 @@ BEGIN {
   if (length(COLOR_PAIRS) < 1) {
     print "⚠️  ⚠️  ⚠️  no color pairs??"
   }
-  for (I = 1; I < length(COLOR_PAIRS); I++) {
+  for (I = 1; I <= length(COLOR_PAIRS); I++) {
     split(COLOR_PAIRS[I], PAIR, " ")
     if (length(PAIR[3])) {
       print "⚠️  ⚠️  ⚠️  wtfffffff" PAIR[3] "???"
