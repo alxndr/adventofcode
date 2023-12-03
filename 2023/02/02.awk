@@ -5,10 +5,7 @@
 
 BEGIN {
   ## setup...
-  CONTENTS["red"] = 12
-  CONTENTS["green"] = 13
-  CONTENTS["blue"] = 14
-  SUM_IDS = 0
+  SUM_POWERS = 0
   ## input-splitting config...
   FS = ": "
 }
@@ -17,26 +14,25 @@ BEGIN {
 # $2: string of rounds (semicolon-separated)
 {
   GAME_ID = $1; sub(/[^0-9]+/, "", GAME_ID)
-  printf "\ngame%3d… ", GAME_ID
-  VALID = 1
   split($2, COLOR_PAIRS, /[,;] /)
-  if (length(COLOR_PAIRS) < 1) print "⚠️  ⚠️  ⚠️  no color pairs??"
+  MAX_SEEN["red"] = 0
+  MAX_SEEN["green"] = 0
+  MAX_SEEN["blue"] = 0
   for (I = 1; I <= length(COLOR_PAIRS); I++) {
     split(COLOR_PAIRS[I], PAIR, " ")
     INT_COUNT = PAIR[1]
     STR_COLOR = PAIR[2]
-    if (INT_COUNT > CONTENTS[STR_COLOR]) {
-      VALID = 0
-      printf "❌ %d %s (%d)", INT_COUNT, STR_COLOR, CONTENTS[STR_COLOR]
-      break
+
+    if (INT_COUNT > MAX_SEEN[STR_COLOR]) {
+      MAX_SEEN[STR_COLOR] = INT_COUNT
     }
-    printf "%s:%d ", substr(STR_COLOR, 1, 1), INT_COUNT
   }
-  if (VALID) {
-    SUM_IDS += GAME_ID
-    printf "\n\tnew SUM_IDS:%5d", SUM_IDS
-  }
+  printf "#%3d… R:%d G:%d B:%d\n", GAME_ID, MAX_SEEN["red"], MAX_SEEN["green"], MAX_SEEN["blue"]
+  # The power of a set of cubes is equal to the numbers of red, green, and blue cubes multiplied together
+  POWER = MAX_SEEN["red"] * MAX_SEEN["green"] * MAX_SEEN["blue"]
+  # For each game, find the minimum set of cubes that must have been present. What is the sum of the power of these sets?
+  SUM_POWERS = SUM_POWERS + POWER
 }
 END {
-  print "\n\nSUM_IDS = " SUM_IDS
+  print "\n\nSUM_POWERS = " SUM_POWERS
 }
