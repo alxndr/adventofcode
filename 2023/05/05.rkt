@@ -40,51 +40,52 @@
         (loop-input (construct-dataset line dataset))))))
 
 (define r-calculate-result-via-mapping
-  (lambda (input mapping-ranges) ; recurses until mapping-ranges is empty
-    ;; (printf "input:~v\nmapping:~v\n" input mapping-ranges)
-    (cond
-      ((empty? mapping-ranges)       #f)
-      ((empty? (car mapping-ranges)) #f)
-      (else
-        (let* ([first-mapping (car mapping-ranges)]
-               [src-range-start (hash-ref first-mapping 'SourceRangeStart)]
-               [dst-range-start (hash-ref first-mapping 'DestinationRangeStart)]
-               [len-range (hash-ref first-mapping 'RangeLength)])
-          ;; if Input is > SourceRangeStart and < SRS+RangeLength-1
-          (if (and (>= input src-range-start)
-                   (<  input (src-range-start . + . (len-range . - . 1))))
-            ;; ...result is Input + (DRS-SRS)
-            (input . + . (dst-range-start . - . src-range-start)) ; wheeeee
-            (let ([recursive-result (r-calculate-result-via-mapping input (car (cdr mapping-ranges)))])
-              (if (equal? #f recursive-result)
-                input ;; "Any source numbers that aren't mapped correspond to the same destination number. So, seed number 10 corresponds to soil number 10."
-                recursive-result))))))))
+  (lambda (input mapping-ranges) ; recurses until mapping-ranges is empty...
+    (if (or (empty? mapping-ranges) (empty? (car mapping-ranges)))
+      #f ; end recursion
+      (let* ([first-mapping (car mapping-ranges)]
+             [src-range-start (hash-ref first-mapping 'SourceRangeStart)]
+             [dst-range-start (hash-ref first-mapping 'DestinationRangeStart)]
+             [len-range (hash-ref first-mapping 'RangeLength)])
+        (if (equal? input 14)
+          (printf "... ~s :: S:~s D:~s L:~s\n...in >= src? ~s ... in < ~s ?? ~s \n"
+                  input
+                            src-range-start
+                  dst-range-start
+                  len-range
+                  (>= input src-range-start)
+                            (src-range-start . + . len-range)
+                  (<  input (src-range-start . + . len-range))
+                  )
+          #f
+        )
+        ;; if Input is >= SourceRangeStart and < SRS+RangeLength-1
+        (if (and (>= input src-range-start)
+                 (<  input (+ src-range-start len-range)))
+          ;; ...result is Input + (DRS-SRS)
+          (input . + . (dst-range-start . - . src-range-start)) ; wheeeee
+          (let ([recursive-result (r-calculate-result-via-mapping input (car (cdr mapping-ranges)))])
+            (if (equal? #f recursive-result)
+              input ;; "Any source numbers that aren't mapped correspond to the same destination number. So, seed number 10 corresponds to soil number 10."
+              recursive-result)))))))
 
-(define calculate-seed-results
-  (lambda (input mappings)
-    (cond
-      ((empty? mappings)
-       input)
-      ((empty? (car mappings))
-       input)
-      (else
+(define r-calculate-seed-results
+  (lambda (input mappings) ; recurses until mappings is empty...
+    (if (or (empty? mappings) (empty? (car mappings)))
+      input ; ...end recursion
       (let* ([top-mapping (car mappings)]
+             [remaining-mappings (cdr mappings)]
              [first-mapping-name (car top-mapping)]
              [first-mapping-ranges (car (cdr top-mapping))])
-        ;; which range (in the top mapping on built-state) does the first-seed fit into?
-        (printf "mapping ~a \t seed... ~s\n" first-mapping-name input)
-        (r-calculate-result-via-mapping input first-mapping-ranges)
-        ;; (build a lil fn for each range... then run the seed through it... return the adjusted destination value...)
-        ;; ...and then do for the next mapping in built-state...
-        )))))
+         (printf "~a ~a\n" input first-mapping-name)
+        (r-calculate-seed-results
+          (r-calculate-result-via-mapping input first-mapping-ranges)
+          remaining-mappings)))))
 
 (let* ([built-state (reverse (loop-input '()))]
        [seeds (car built-state)]
-       [mappings (cdr built-state)])
-  ;; (printf "\nseeds ~a\n" seeds)
-  ;; (printf "\nmappings ~a\n" mappings)
-  (map (lambda (seed) (calculate-seed-results seed mappings))
-       seeds)
-  ;; pop off the seeds from built-state...
-  ;; ... and then look for the lowest Location value: "What is the lowest location number that corresponds to any of the initial seed numbers?"
-  )
+       [mappings (cdr built-state)]
+       [locations (map (lambda (seed) (r-calculate-seed-results seed mappings)) seeds)])
+  ;; ... the lowest Location value: "What is the lowest location number that corresponds to any of the initial seed numbers?"
+  (printf "locations?? ~a \n" locations)
+  (printf "Lowest: ~s \n" (apply min locations)))
