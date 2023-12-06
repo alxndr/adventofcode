@@ -14,11 +14,13 @@ For example:
 
 Time:      7  15   30
 Distance:  9  40  200
+
 This document describes three races:
 
 The first race lasts 7 milliseconds. The record distance in this race is 9 millimeters.
 The second race lasts 15 milliseconds. The record distance in this race is 40 millimeters.
 The third race lasts 30 milliseconds. The record distance in this race is 200 millimeters.
+
 Your toy boat has a starting speed of zero millimeters per millisecond. For each whole millisecond you spend at the beginning of the race holding down the button, the boat's speed increases by one millimeter per millisecond.
 
 So, because the first race lasts 7 milliseconds, you only have a few options:
