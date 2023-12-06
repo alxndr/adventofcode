@@ -14,6 +14,20 @@ Distance:   298   1185   1066   1181
 HERE
 )
 
+(define bigger-input
+  #<<HERE
+Time:      71530
+Distance:  940200
+HERE
+)
+
+(define biggest-input
+  #<<HERE
+Time:        49787980
+Distance:   298118510661181
+HERE
+)
+
 (define (transpose xss) (apply map list xss)) ; h/t 0xF https://stackoverflow.com/a/69269638/303896
 
 (define calc-race-time
@@ -29,7 +43,6 @@ HERE
 (define calc-race-results
   (lambda (total-time dist-to-beat)
     (let ([all-hold-times (r-decrement total-time '())])
-      ;; (printf "all-times..... ~a\n\n" all-hold-times)
       (map (lambda (hold-time) (calc-race-time hold-time total-time)) all-hold-times))))
 
 (define do-thing
@@ -38,12 +51,10 @@ HERE
            [dist-to-beat (car (cdr pairing))]
            [race-results (calc-race-results total-time dist-to-beat)]
            [winning-results (filter (lambda (result) (> result dist-to-beat)) race-results)])
-      (printf "race-results ~s\n\n" race-results)
-      (printf "winning-results ~s\n\n" winning-results)
       (length winning-results))))
 
 (let* {
-  [t-s (map string-trim (string-split big-input "\n") )]
+  [t-s (map string-trim (string-split biggest-input "\n") )]
   [t-s-t (map cdr (map string-split t-s))]
   [transposed (transpose (map (lambda (l-o-s) (map string->number l-o-s)) t-s-t))] ; omg such map
   }
