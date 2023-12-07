@@ -31,17 +31,9 @@ HERE
         ["J" 11]
         ["Q" 12]
         ["K" 13]
-        ["A" 14])
-      )))
+        ["A" 14]))))
 
 ; to determine the relative strength of a Hand... first sort the Hand's Cards??
-
-#| (define (process-and-sort unsorted-hand-string)
-  (let* [[unsorted-hand (filter (lambda (card) (not (equal? "" card)))
-                                (string-split unsorted-hand-string ""))]
-         [unsorted-hand-converted (map convert-card unsorted-hand)]
-         [sorted-hand (sort unsorted-hand-converted >)]]
-    sorted-hand)) |#
 
 ; nope don't need to sort... but do need to identify how many of each value in the hand...
 
@@ -49,45 +41,76 @@ HERE
   (map convert-card (filter (lambda (card) (not (equal? "" card)))
                             (string-split unsorted-hand-string ""))))
 
-#| (define (hand-to-type-num hand)
-     (match hand
-       [(list a a a a a) 6];5-of-a-kind]
-       [(list a a a a b) 5];4-of-a-kind]
-       [(list a a a b b) 4];full-house]
-       [(list a a a b c) 3];3-of-a-kind]
-       [(list a a b b c) 2];2-pair]
-       [(list a a b c d) 1];1-pair]
-       [(list a b c d e) 0];high-card]
-       [_ 'error]
-       )) |#
-
 ; do it manually: count how many there are of each value...
-(define (hand-to-type-num hand)
+
+(define (r-how-many-of-each-card-in-a-hand hand accumulator) ; accumulator: list of tuples (CardInt CountOfCard)
+  ;; (printf "\nr..... ~a /// ~a \n\n" hand accumulator)
+  (if (or (empty? hand) (empty? (car hand)))
+    accumulator
+    (let*-values [[(first-card) (car hand)] ; `let`'s `-values` variant allowes multiple return values (for the use of `partition`)
+                  [(remaining-hand) (cdr hand)]
+                  [(matching-cards remaining-cards)
+                   (partition (curry = first-card) ;; => `(lambda (card) (= first-card card))`
+                              remaining-hand)]
+                 [(matched-cards) (cons first-card matching-cards)]
+                 ]
+      (r-how-many-of-each-card-in-a-hand remaining-cards
+                                         (cons (list first-card (length matched-cards))
+                                               accumulator)))))
+
+; now we can tell what type of hand we have...
+; sort by count of each card, then pattern-match to determine type
+(define (hand-to-type-num hand) ; ...then extract so that this is just the pattern-match??
   (let* [[first-card (car hand)]
-         [remaining-cards-partitioned
-           (partition (lambda (card)
-                        (equal? card first-card)) (cdr hand))]
+         [cards-per-hand (r-how-many-of-each-card-in-a-hand hand '())]
+         ; e.g.          ((14 1) (11 1) (12 3))
+         ;               ((11 1)  (5 3) (10 1))
+         ;               ( (7 2)  (6 1) (13 2))
+         ;; [sorted-by-count (sort
+         ;;                    (λ (card-and-count-a card-and-count-b) (> (car (cdr card-and-count-a))
+         ;;                                                             (car (cdr card-and-count-b))))
+         ;;                    cards-per-hand)]
+         [sorted-by-count
+           (reverse (sort cards-per-hand
+                          (λ (aC&C bC&C)
+                            (let [[aCard (car aC&C)]
+                                  [aCount (car (cdr aC&C))]
+                                  [bCard (car bC&C)]
+                                  [bCount (car (cdr bC&C))]]
+                              (if (= aCount bCount)
+                                (< aCard bCard)
+                                (< aCount bCount))))))
+           ]
          ]
-    (printf ">>> ~a : \n" hand)
-    (printf ">>> ~a : \n" (car hand))
-    (printf ">>> ~a : \n" (cdr hand))
-    ;; (printf "… ~a \n" remaining-cards-partitioned)
-    )
-  0)
+    ;; (printf ">>> ~a : \n" hand)
+    ;; (printf "--> ~a \n" (car hand))
+    ;; (printf "--> ~a \n" (cdr hand))
+    ;; (printf "cards-per-hand\t  ~a \n" cards-per-hand)
+    ;; (printf "sorted    >>>>>   ~a \n" sorted-by-count)
+    (match sorted-by-count
+      [(list (list _ 5)                                 ) 55] ; 5 of a kind
+      [(list (list _ 4) (list _ 1)                      ) 44] ; 4 of a kind
+      [(list (list _ 3) (list _ 2)                      )  4] ; full house
+      [(list (list _ 3) (list _ 1) (list _ 1)           )  3] ; 3 of a kind
+      [(list (list _ 2) (list _ 2) (list _ 1)           )  2] ; 2 pair
+      [(list (list _ 2) (list _ 1) (list _ 1) (list _ 1))  1] ; 1 pair
+      [ _                                                  0] ; ruh roh
+      )))
+
 (define (compare-hands hand-a hand-b)
+  (printf "comparing hands ~a ...&... ~a ?? \n" hand-a hand-b)
   (let* [[hand-type-a (hand-to-type-num hand-a)]
          [hand-type-b (hand-to-type-num hand-b)]
-         [type-comparison (< hand-type-a hand-type-b)]]
+         ]
     (if (= hand-type-a hand-type-b)
       (let []
-        (printf "ruh roh they're equal...\n"))
-      type-comparison)))
+        (printf "ruh roh they're equal...\n")
+        )
+      (< hand-type-a hand-type-b))))
 
+(printf "\n\n\n")
 (let* [[split-input (string-split input-sample)]
        [hands-and-bids (pair-em-up split-input '())]
-       ;; [processed-hands-and-bids (map (lambda (hand-and-bid) (list (process-and-sort (car hand-and-bid))
-       ;;                                                             (car (cdr hand-and-bid))))
-       ;;                                hands-and-bids)]
        [processed-hands-and-bids (map (lambda (hand-and-bid) (list (process-hand (car hand-and-bid))
                                                                    (car (cdr hand-and-bid))))
                                       hands-and-bids)]
@@ -95,18 +118,13 @@ HERE
                                     (lambda (a b)
                                       (let [[hand-a (car a)] [bid-a (car (cdr a))]
                                             [hand-b (car b)] [bid-b (car (cdr b))]]
-                                        ;; (printf "comparing bids $~s < $~s ?? ~a \n" bid-a bid-b (< bid-a bid-b))
-                                        ;; (< bid-a bid-b)
-                                        (printf "comparing hands ~a < ~a ?? \n" hand-a hand-b)
-                                        (printf "\t\t?? ~a \n" (compare-hands hand-a hand-b))
-                                        ;; (printf "hand-a......... ~a \n" hand-a)
                                         (compare-hands hand-a hand-b)
                                         )))]
        ]
   ;; (printf "split-input: ~s \n" split-input)
   (printf "hands-and-bids: ~s \n" hands-and-bids)
-  (printf "processed : ~a \n" processed-hands-and-bids)
-  ;; (printf "sorted... : ~a \n" sorted-hands-and-bids)
+  ;; (printf "processed: ~a \n" processed-hands-and-bids)
+  (printf "sorted??? ~a \n" sorted-hands-and-bids)
   ; once sorted, each bid is multiplied by the rank... (length - (index + 1))
   )
 
