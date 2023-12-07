@@ -9,9 +9,9 @@ T55J5 684
 KK677 28
 KTJJT 220
 QQQJA 483
-44555 6666
 HERE
 )
+;44555 6666
 
 (define (pair-em-up split-input hands-and-bids)
   (if (or (empty? split-input) (empty? (car split-input)))
@@ -113,6 +113,26 @@ HERE
            b-first-card-value))
       (< a-ranked-type b-ranked-type))))
 
+(define (camel-compare a b)
+  (if (or (empty? a) (empty? b))
+    0
+    (if (equal? (car a) (car b))
+      (camel-compare (cdr a) (cdr b))
+      (< (car a) (car b)))))
+
+(define (compare-camel-hands hand-a hand-b)
+  ; "33332 and 2AAAA are both four of a kind hands, but 33332 is stronger because its first card is stronger. Similarly, 77888 and 77788 are both a full house, but 77888 is stronger because its third card is stronger (and both hands have the same first and second card)"
+  (let* {
+    [a-ranked (rank-hand hand-a)]
+    [b-ranked (rank-hand hand-b)]
+    [a-ranked-type (car a-ranked)]
+    [b-ranked-type (car b-ranked)]
+    }
+    ;; (printf "🐪 ~a ——— ~a \n" hand-a hand-b)
+    (if (= a-ranked-type b-ranked-type)
+      (camel-compare hand-a hand-b)
+      (< a-ranked-type b-ranked-type))))
+
 (printf "\n\n\n")
 (let* [[split-input (string-split input-sample)]
        [hands-and-bids (pair-em-up split-input '())]
@@ -127,17 +147,26 @@ HERE
                                              [hand-b (car b)]
                                              ;[bid-b  (car (cdr b))]
                                              ]
-                                         (compare-hands hand-a hand-b)))))]
+                                         (compare-camel-hands hand-a hand-b)))))]
        ]
   ;; (printf "split-input: ~s \n" split-input)
 
-  (printf "\nhands-and-bids: ~s \n" hands-and-bids)
+  (printf "\nhands-and-bids: \n") (pretty-print hands-and-bids)
 
-  ;; (printf "processed: ~a \n" processed-hands-and-bids)
+  (printf "\nsorted... \n") (pretty-print sorted-hands-and-bids)
 
-  (printf "sorted??? ~a \n" sorted-hands-and-bids
-          ;; (string-join sorted-hands-and-bids "\n")
-          )
+  (printf "sum...")
+  (pretty-print (foldl (λ (hand-and-bid sum)
+                         (let* {
+                           [hand (car hand-and-bid)]
+                           [bid (car (cdr hand-and-bid))]
+                           [rank 0] ; TODO
+                           [payout (* rank bid)]
+                           }
+                           (printf "hand ~a \tbid $~s \tranked #~s \t= payout$~s \n" hand bid rank payout)
+                           (+ sum payout)))
+                       0
+                       sorted-hands-and-bids))
 
   ; score for each hand:
   ; once sorted, each bid is multiplied by the rank... (length - (index + 1))
