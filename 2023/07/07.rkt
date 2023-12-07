@@ -133,30 +133,23 @@ HERE
       (camel-compare hand-a hand-b)
       (< a-ranked-type b-ranked-type))))
 
-(printf "\n\n\n")
-(let* [[split-input (string-split input-sample)]
-       [hands-and-bids (pair-em-up split-input '())]
-       [processed-hands-and-bids (map (λ (hand-and-bid)
-                                        (list (process-hand (car hand-and-bid))
-                                              (car (cdr hand-and-bid))))
-                                      hands-and-bids)]
-       [sorted-hands-and-bids (reverse (sort processed-hands-and-bids
-                                     (λ (a b)
-                                       (let [[hand-a (car a)]
-                                             ;[bid-a  (car (cdr a))]
-                                             [hand-b (car b)]
-                                             ;[bid-b  (car (cdr b))]
-                                             ]
-                                         (compare-camel-hands hand-a hand-b)))))]
-       ]
-  ;; (printf "split-input: ~s \n" split-input)
+(define (r-fold-with-index-decrementing hands-and-bids rank sum)
+  (printf "(sum:~s)\n\nfolding rank #~s \n" sum rank)
+  (if (empty? hands-and-bids) ; rank should be 0?? too...
+    sum
+    (let* {
+      [hand-and-bid (car hands-and-bids)]
+      [bid (car (cdr hand-and-bid))]
+      }
+      (printf "\t * $~s  =>  $~s\n" bid (* bid rank))
+      (r-fold-with-index-decrementing
+        (cdr hands-and-bids)
+        (- rank 1)
+       (+ sum (* bid rank))
+       )
+      )))
 
-  (printf "\nhands-and-bids: \n") (pretty-print hands-and-bids)
-
-  (printf "\nsorted... \n") (pretty-print sorted-hands-and-bids)
-
-  (printf "sum...")
-  (pretty-print (foldl (λ (hand-and-bid sum)
+  #| (pretty-print (foldl (λ (hand-and-bid sum)
                          (let* {
                            [hand (car hand-and-bid)]
                            [bid (car (cdr hand-and-bid))]
@@ -166,7 +159,38 @@ HERE
                            (printf "hand ~a \tbid $~s \tranked #~s \t= payout$~s \n" hand bid rank payout)
                            (+ sum payout)))
                        0
-                       sorted-hands-and-bids))
+                       sorted-hands-and-bids)) |#
+
+(printf "\n\n\n")
+(let* [[split-input (string-split input-sample)]
+       [hands-and-bids (pair-em-up split-input '())]
+       [processed-hands-and-bids (map (λ (hand-and-bid)
+                                        (list (process-hand (car hand-and-bid))
+                                              (car (cdr hand-and-bid))))
+                                      hands-and-bids)]
+       [sorted-hands-and-bids (reverse ; first element is winning hand; last element is ranked 1
+                                (sort processed-hands-and-bids
+                                      (λ (a b)
+                                        (let [[hand-a (car a)]
+                                              ;[bid-a  (car (cdr a))]
+                                              [hand-b (car b)]
+                                              ;[bid-b  (car (cdr b))]
+                                              ]
+                                          (compare-camel-hands hand-a hand-b))))
+                                )
+                              ]
+       ]
+  ;; (printf "split-input: ~s \n" split-input)
+
+  (printf "\nhands-and-bids: \n") (pretty-print hands-and-bids)
+
+  (printf "\nsorted... \n") (pretty-print sorted-hands-and-bids)
+
+  (printf "\ngotta sum up (~s things) now......" (length sorted-hands-and-bids))
+  (pretty-print (r-fold-with-index-decrementing
+                  sorted-hands-and-bids
+                  (length sorted-hands-and-bids) ; could recalculate but might as well not...
+                  0))
 
   ; score for each hand:
   ; once sorted, each bid is multiplied by the rank... (length - (index + 1))
