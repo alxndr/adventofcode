@@ -2,6 +2,7 @@ const input = `
 RLRL
 
 AAA = (BBB, CCC)
+BAA = (BBB, CCC)
 BBB = (DDD, EEE)
 CCC = (ZZZ, GGG)
 DDD = (DDD, DDD)
@@ -817,27 +818,37 @@ BJR = (VKX, JCV)
 CRN = (BCX, DTB)
 `
 
-const [directions, _, ...mappingArr] = inputBig.trim().split('\n')
+const [directions, _, ...mappingArr] = input.trim().split('\n')
 const lenDirections = directions.length
 const numMappings = mappingArr.length
+// global.console.log(mappingArr.join('\n'))
 global.console.log({directions, lenDirections, numMappings})
 
 const mappingObj = mappingArr.reduce((a, e) => {
-  const [from, L, R] = e.replace(/[^A-Z ]+/g, '').split(/\s+/)
-  // global.console.log({from, L, R})
-  a[from] = {from, L, R};
+  const [id, L, R] = e.replace(/[^A-Z ]+/g, '').split(/\s+/)
+  a[id] = {id, L, R};
+  if (id.endsWith('A')) a.start.push(a[id])
   return a
-}, {})
+}, {start:[]})
 
-// global.console.log(mappingObj)
-let cursor = mappingObj.AAA
+global.console.log(mappingObj)
 
+let cursors = [...mappingObj.start]
 let i = 0
-while (cursor?.from != 'ZZZ' && i < 10e10) {
+global.console.log({i, cursors})
+while (!cursors.every(c => c.id.endsWith('Z')) && i < 10e6) {
   const n = i % lenDirections
-  global.console.log({i, n, dir:directions?.[n]})
-  if (!cursor[directions[n]]) throw new Error(`ruh roh... ${i} ${n} ${directions[n]}`)
-  cursor = mappingObj[cursor[directions[n]]];
+  const dir = directions[n]
+  global.console.log('\n', {i, n, cursors, dir})
+  cursors = cursors.map(c => {
+    const nextKey = mappingObj[c][dir]
+    global.console.log('in cursors loop...', {c, dir:directions[n], nextKey});
+    // mappingObj[mappingObj[c]]
+    return mappingObj[
+      nextKey
+    ]
+  })
+  global.console.log('next cursors is gonna be:', cursors)
   i++;
 }
 
