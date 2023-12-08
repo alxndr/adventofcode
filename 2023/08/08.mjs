@@ -15,8 +15,26 @@ const inputLoop = `
 LLR
 
 AAA = (BBB, BBB)
+BAA = (BBZ, BBB)
+BBZ = (BBZ, BBZ)
+ABA = (BBB, BBB)
+BBA = (BBB, BBB)
+ACA = (BBB, BBB)
 BBB = (AAA, ZZZ)
 ZZZ = (ZZZ, ZZZ)
+`
+
+const inputPart2 = `
+LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)
 `
 
 const inputBig = `
@@ -818,38 +836,51 @@ BJR = (VKX, JCV)
 CRN = (BCX, DTB)
 `
 
-const [directions, _, ...mappingArr] = input.trim().split('\n')
+const [directions, _, ...mappingArr] = inputBig.trim().split('\n')
 const lenDirections = directions.length
 const numMappings = mappingArr.length
 // global.console.log(mappingArr.join('\n'))
-global.console.log({directions, lenDirections, numMappings})
+// global.console.log({directions, lenDirections, numMappings})
 
 const mappingObj = mappingArr.reduce((a, e) => {
-  const [id, L, R] = e.replace(/[^A-Z ]+/g, '').split(/\s+/)
+  const [id, L, R] = e.replace(/[^0-9A-Z ]+/g, '').split(/\s+/)
   a[id] = {id, L, R};
   if (id.endsWith('A')) a.start.push(a[id])
+  // if (id === 'AAA') a.start.push(a[id])
   return a
 }, {start:[]})
 
-global.console.log(mappingObj)
+// global.console.log(mappingObj)
 
+let answerKey = {}
+// key:  starting cursor
+// value:{start, jumps, end}
+
+const startingCursors = [...mappingObj.start]
 let cursors = [...mappingObj.start]
 let i = 0
-global.console.log({i, cursors})
-while (!cursors.every(c => c.id.endsWith('Z')) && i < 10e6) {
+// global.console.log({i, cursors})
+let max = 10e5 // Number.MAX_SAFE_INTEGER
+while (!cursors.every(c => c.id.endsWith('Z')) && i < max) {
   const n = i % lenDirections
   const dir = directions[n]
-  global.console.log('\n', {i, n, cursors, dir})
-  cursors = cursors.map(c => {
-    const nextKey = mappingObj[c][dir]
-    global.console.log('in cursors loop...', {c, dir:directions[n], nextKey});
-    // mappingObj[mappingObj[c]]
-    return mappingObj[
-      nextKey
-    ]
+
+  cursors = cursors.map((c, index) => {
+    if (c.id === 'Z') { // another cursor has solved this track already...
+      // global.console.log('REPLACING cursor with answer...........', answerKey[c.start]);
+      return {id: 'Z', start:startingCursors[index].id}
+    }
+
+    const nextKey = mappingObj[c.id][dir];
+    if (nextKey.endsWith('Z') && !answerKey[startingCursors[index].id]) {
+      // global.console.log('got the key here', {start:startingCursors[index].id, jumps:i+1, nextKey})
+      answerKey[startingCursors[index].id] = {start:startingCursors[index].id, jumps:i+1, end:nextKey}
+      return {id: 'Z', start:startingCursors[index].id, jumps:i+1}
+    }
+    return mappingObj[nextKey]
   })
-  global.console.log('next cursors is gonna be:', cursors)
+  // global.console.log('next cursors is gonna be:', cursors)
   i++;
 }
 
-global.console.log({i, cursor})
+global.console.log({i, answerKey, cursors}, '\n')
