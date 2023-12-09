@@ -2,6 +2,10 @@
 
 (require "input.rkt")
 
+(provide answer-sample
+         answer-full
+         hand-to-type-num)
+
 (define (pair-em-up split-input hands-and-bids)
   (if (or (empty? split-input) (empty? (car split-input)))
     hands-and-bids
@@ -48,15 +52,16 @@
 ; now we can tell what type of hand we have...
 ; sort by count of each card, then pattern-match to determine type
 (define (hand-to-type-num sorted-by-count) ; return val: bigger number is more winningest
-  ; edge cases: JJJJJ is 5-ofa-kind but loses to all others inc JJJJ2
+  ;; (printf "sorted-by-count... ~a \n" sorted-by-count)
   (match sorted-by-count
-    [(list (list _ 5)            _ ...) 55] ; 5 of a kind
-    [(list (list _ 4)            _ ...) 44] ; 4 of a kind
-    [(list (list _ 3) (list _ 2) _ ...) 40] ; full house
-    [(list (list _ 3)            _ ...) 33] ; 3 of a kind
-    [(list (list _ 2) (list _ 2) _ ...) 22] ; 2 pair
-    [(list (list _ 2)            _ ...) 11] ; 1 pair
-    [ _                                  0] ; ruh roh
+    [(list (list _ 5)                ) 55] ; 5 of a kind
+    [(list (list _ 4)            _...) 44] ; 4 of a kind
+    [(list (list _ 3) (list _ 2) _...) 40] ; full house
+    [(list (list _ 3)            _...) 33] ; 3 of a kind
+    [(list (list _ 2) (list _ 2) _...) 22] ; 2 pair
+    [(list (list _ 2)            _...) 11] ; 1 pair
+    [(list (list _ 1)            _...)  1] ; high card
+    [ _                                 0] ; ruh roh
     ))
 
 (define (r-add-n-to-the-count-of-everything-in n non-joker-cards-with-count added)
@@ -166,11 +171,11 @@
       [hand (pretty-hand (car hand-and-bid))]
       [bid (car (cdr hand-and-bid))]
       }
-      (printf "~a  $ ~a *~a#  =>  $ ~a\n"
-              hand
-              (~a bid  #:align 'right  #:min-width 3)
-              (~a rank #:align 'center #:min-width 5)
-              (~a (* bid rank) #:align 'center))
+      ;; (printf "~a  $ ~a *~a#  =>  $ ~a\n"
+      ;;         hand
+      ;;         (~a bid  #:align 'right  #:min-width 3)
+      ;;         (~a rank #:align 'center #:min-width 5)
+      ;;         (~a (* bid rank) #:align 'center))
       (r-fold-with-rank (cdr hands-and-bids)
                         (+ rank 1)
                         (+ sum (* bid rank))))))
@@ -184,38 +189,44 @@
                  (car (hand-to-type processed-hand)))))
        hands-and-bids))
 
-(let* [[split-input (string-split input-large)]
-       [hands-and-bids (pair-em-up split-input '())] ; same order as input...?
-       [processed-hands-and-bids (process-input-hand-and-bids hands-and-bids)] ; reverse order from input
-       [sorted-hands-and-bids ; first element is winning hand; last element is ranked 1
-         (sort processed-hands-and-bids
-               (λ (a b)
-                 (let* {
-                   [hand-a (car a)]
-                  ;[bid-a  (car (cdr a))]
-                   [hand-b (car b)]
-                  ;[bid-b  (car (cdr b))]
-                   [a-ranked (hand-to-type hand-a)]
-                   [b-ranked (hand-to-type hand-b)]
-                   [a-ranked-type (car a-ranked)]
-                   [b-ranked-type (car b-ranked)]
-                   }
-                   (compare-camel-hands hand-a hand-b)
-                   ;; (if (equal? a-ranked-type b-ranked-type) (compare-camel-hands hand-a hand-b) (not (< a-ranked-type b-ranked-type)))
-                   )))]
-       ]
-  ;; (printf "\nsplit-input: ~s \n" split-input)
-  ;; (printf "\nhands-and-bids: \n~s\n" hands-and-bids)
-  ;; (printf "\nprocessed ") (pretty-print processed-hands-and-bids)
-  ;; (printf "\nsorted... \n") (pretty-print sorted-hands-and-bids) ; TODO alter to show type as well...
-  ; score for each hand: once sorted, each bid is multiplied by its rank... (length - (index + 1))
-  (printf "\ngotta sum up (~s things) now......\n" (length sorted-hands-and-bids))
-  ; input-sample => 5905
-  ; full input => 253997357 too high
-  ;               253552043 too high
-  (pretty-print (r-fold-with-rank
-                  (reverse sorted-hands-and-bids)
-                  1
-                  0)))
+(define (answer-with-input input)
+  (let* [[split-input (string-split input)]
+         [hands-and-bids (pair-em-up split-input '())] ; same order as input...?
+         [processed-hands-and-bids (process-input-hand-and-bids hands-and-bids)] ; reverse order from input
+         [sorted-hands-and-bids ; first element is winning hand; last element is ranked 1
+           (sort processed-hands-and-bids
+                 (λ (a b)
+                   (let* {
+                     [hand-a (car a)]
+                    ;[bid-a  (car (cdr a))]
+                     [hand-b (car b)]
+                    ;[bid-b  (car (cdr b))]
+                     [a-ranked (hand-to-type hand-a)]
+                     [b-ranked (hand-to-type hand-b)]
+                     [a-ranked-type (car a-ranked)]
+                     [b-ranked-type (car b-ranked)]
+                     }
+                     (compare-camel-hands hand-a hand-b)
+                     ;; (if (equal? a-ranked-type b-ranked-type) (compare-camel-hands hand-a hand-b) (not (< a-ranked-type b-ranked-type)))
+                     )))]
+         ]
+    ;; (printf "\nsplit-input: ~s \n" split-input)
+    ;; (printf "\nhands-and-bids: \n~s\n" hands-and-bids)
+    ;; (printf "\nprocessed ") (pretty-print processed-hands-and-bids)
+    ;; (printf "\nsorted... \n") (pretty-print sorted-hands-and-bids) ; TODO alter to show type as well...
+    ; score for each hand: once sorted, each bid is multiplied by its rank... (length - (index + 1))
+    ;; (printf "\ngotta sum up (~s things) now......\n" (length sorted-hands-and-bids))
+    (r-fold-with-rank
+      (reverse sorted-hands-and-bids)
+      1
+      0))
+  )
 
-(printf "\ndone\n")
+(define (answer-sample)
+  (answer-with-input input-sample))
+; 5905 correct
+
+(define (answer-full)
+  (answer-with-input input-large))
+; 253997357 too high
+; 253552043 too high
