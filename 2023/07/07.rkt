@@ -4,6 +4,7 @@
 
 (provide answer-sample
          answer-full
+         camel-compare
          hand-to-type-num)
 
 (define (pair-em-up split-input hands-and-bids)
@@ -16,7 +17,7 @@
                   (cons `(,hand ,(string->number bid))
                         hands-and-bids)))))
 
-(define (convert-card card-character)
+(define (convert-card card-character) ; TODO pass in value for J...
   (let [[maybe-number (string->number card-character 10 'number-or-false)]]
     (if (not (equal? #f maybe-number))
       maybe-number
@@ -27,15 +28,9 @@
         ["K" 13]
         ["A" 14]))))
 
-; to determine the relative strength of a Hand... first sort the Hand's Cards??
-
-; nope don't need to sort... but do need to identify how many of each value in the hand...
-
 (define (process-hand unsorted-hand-string)
   (map convert-card (filter (λ (card) (not (equal? "" card)))
                             (string-split unsorted-hand-string ""))))
-
-; do it manually: count how many there are of each value...
 
 (define (r-how-many-of-each-card-in-a-hand hand accumulator) ; accumulator: list of tuples (CardInt CountOfCard)
   (if (or (empty? hand) (empty? (car hand)))
@@ -49,8 +44,6 @@
                                          (cons (list first-card (length matched-cards))
                                                accumulator)))))
 
-; now we can tell what type of hand we have...
-; sort by count of each card, then pattern-match to determine type
 (define (hand-to-type-num sorted-by-count) ; return val: bigger number is more winningest
   ;; (printf "sorted-by-count... ~a \n" sorted-by-count)
   (match sorted-by-count

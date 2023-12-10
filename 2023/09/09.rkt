@@ -2,9 +2,10 @@
 
 (require "input.rkt")
 
-(provide steps-til-zero-deriv
+(provide ;steps-til-zero-deriv
          find-the-gaps
-         predict-next-val)
+         predict-next-val
+         sum-of-predictions)
 
 (define (find-the-gaps-r vals prev-val gaps)
   ; gaps will be built backwards from the order of vals, and reversed before being returned
@@ -24,7 +25,7 @@
         [diff (- head prev-val)]}
         (find-the-gaps-r tail
                          head
-                         (cons (- head prev-val)
+                         (cons diff
                                gaps)))
       ]))
 (define (find-the-gaps xs)
@@ -32,7 +33,6 @@
   (find-the-gaps-r xs 'NULL 'NULL))
 
 (define (steps-til-zero-deriv-R vals num-derivs max-derivs)
-  ;; (printf "steps-til-zero-deriv-R ~a ~a\n" vals num-derivs)
   (if (empty? vals)
     'error-unexpected
     (if (or (>= num-derivs max-derivs)
@@ -43,29 +43,30 @@
                               max-derivs))))
 (define (steps-til-zero-deriv xs)
   ; how many "deriv" steps until the gaps are all zero?
+  ; ... this might be a red herring for the answer??
   (steps-til-zero-deriv-R xs 0 99)) ; TODO can we do optional keyword args??
 
-(define (predict-next-val-R vals n)
-  (printf "predict-next-val-R ~a n=~a \n" vals n)
-  (printf "...??? ~a \n\n" (- (car (cdr vals)) (car vals)))
-  (if (= 0 n)
-    (car vals)
-    (if (= 1 n)
-      (+ (car vals)
-         (- (car (cdr vals)) (car vals)))
-      (+ 1
-         (predict-next-val-R (find-the-gaps vals) (n . - . 1))))))
-
-    ; (2) ...  9  12  15  __
-    ; (1) ...   3   3   3   
-    ; (0) ...     0   0   +0
-
+(define (predict-next-val-R vals) ; vals is backwards from input
+  (printf "predicting... ~a \n" vals)
+  (let* [[the-gaps (find-the-gaps vals)]]
+    (printf "    . . . gaps ~a  \n" the-gaps)
+    (if (apply (curry = 0) the-gaps)
+      (car vals) ; simplest base case
+      (let [[predicted-next-gap (predict-next-val-R the-gaps)]]
+        ;; (printf "\t\tnext gap= ~a ... + ~a = ~a\n" predicted-next-gap
+        ;;         (car vals)
+        ;;         (+ (* -1 predicted-next-gap) (car vals))
+        ;;         )
+        (+ (* -1 predicted-next-gap) ; TODO not sure why * -1
+           (car vals))))))
 (define (predict-next-val xs)
   ; make a slightly-informed guess about what the next value could be...
-  (let {
-    [steps (steps-til-zero-deriv xs)]
-    }
-    (printf "steps.. ~a \n~a\n" steps xs)
-    (predict-next-val-R (reverse xs) steps)
-    )
+  (predict-next-val-R (reverse xs)))
+
+(define (sum-of-predictions input)
+  (printf "input..... ~s \n" (string-split input))
+  (apply +
+       (map (λ (string) (predict-next-val (map string->number (string-split string))))
+            (string-split input "\n"))
+       )
   )
