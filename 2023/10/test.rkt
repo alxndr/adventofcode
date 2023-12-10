@@ -20,26 +20,34 @@
       (test-case "many lists" (check-equal? (process-input-lists '(("!") ("J" "?" "|") ("7" "F" "L" "-" "S"))) '((X) (J X !) (7 F L - S))))
       )
 
-    (test-suite "findXY"
-      (test-case "simple"
-        (check-equal? (findXY 0 0 '()) 'error-malformed)
-        (check-equal? (findXY 0 0 '(())) 'error-empty)
-        (check-equal? (findXY 1 2 '((a b c) (d e f) (g h i) (j k l))) 'h)
-        )
+    (test-suite "findXY-within"
+      (test-case "simple usage" (check-equal? (findXY-within 1 2 '((a b c) (d e f) (g h i) (j k l))) 'h))
+      (test-case "error handling"
+        (check-equal? (findXY-within 0 0 '())   'error-malformed)
+        (check-equal? (findXY-within 0 0 '(())) 'error-empty))
+      )
+
+    (test-suite "find-index"
+      (test-case "basic" (check-equal? (find-index 3 '(1 2 3)) 2))
       )
 
     (test-suite
-      "find-index"
+      "adjacent-dims-with-labels"
 
+      (test-case "center" (check-equal? (adjacent-dims-with-labels 1 1 '((1 2 3) (4 5 6) (7 8 9))) '((1 0 above) (0 1 left) (2 1 right) (1 2 below))))
       (test-case
-        "basic"
-
-        (check-equal?
-          (find-index 3 '(1 2 3))
-          2)
-
-        ))
-
+        "sides"
+        (check-equal? (adjacent-dims-with-labels 1 0 '((1 2 3) (4 5 6) (7 8 9))) '((0 0 left)  (2 0 right) (1 1 below)))
+        (check-equal? (adjacent-dims-with-labels 0 1 '((1 2 3) (4 5 6) (7 8 9))) '((0 0 above) (1 1 right) (0 2 below)))
+        (check-equal? (adjacent-dims-with-labels 1 2 '((1 2 3) (4 5 6) (7 8 9))) '((1 1 above) (0 2 left)  (2 2 right)))
+        )
+      (test-case
+        "corners"
+        (check-equal? (adjacent-dims-with-labels 0 0 '((1 2 3) (4 5 6) (7 8 9))) '((1 0 right) (0 1 below)))
+        (check-equal? (adjacent-dims-with-labels 2 0 '((1 2 3) (4 5 6) (7 8 9))) '((1 0 left)  (2 1 below)))
+        (check-equal? (adjacent-dims-with-labels 2 2 '((1 2 3) (4 5 6) (7 8 9))) '((2 1 above) (1 2 left)))
+        )
+      )
     )
 
   )
