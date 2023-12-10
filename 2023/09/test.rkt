@@ -65,21 +65,31 @@
       (test-case
         "start small"
         (check-equal?
-          (sum-of-predictions "0 0 0\n1 1 1")
-          1)))
+          (sum-of-predictions "0 0 0\n1 1 1" predict-next-val)
+          1))
 
-    (test-case
-      "sample input"
+      (test-case
+        "sample input"
+        (check-equal?
+          (sum-of-predictions input-sample predict-next-val)
+          114))
+
+      (test-case
+        "full input"
+        (check-equal?
+          (sum-of-predictions input-full predict-next-val)
+          2101499000))
+      )
+
+    (test-suite
+      "predict-previous-val"
       (check-equal?
-        (sum-of-predictions input-sample)
-        114))
-
-    (test-case
-      "full input"
+        (predict-previous-val '(10  13  16  21  30  45))
+        5)
       (check-equal?
-        (sum-of-predictions input-full)
-        2101499000))
-
+        (sum-of-predictions input-full predict-previous-val)
+        1089)
+      )
     )
 
   )
