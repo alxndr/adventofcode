@@ -5,7 +5,8 @@
          ;find-start
          find-index
          findXY-within
-         adjacent-dims-with-labels)
+         adjacent-dims-with-labels
+         unwrap)
 
 (require "input.rkt")
 ; assumptions about input:
@@ -119,7 +120,7 @@
   (let [[width (length (car pipemap))]
         [height (length pipemap)]]
     (filter
-      (λ (xy) (is-within-dims (car xy) (car (cdr xy)) width height))
+      (λ (xy-label) (is-within-dims (car xy-label) (car (cdr xy-label)) width height))
       `(
         (,x       ,(- y 1) above)
         (,(- x 1) ,y       left)
@@ -161,7 +162,6 @@
                     [shape-of-neighbor (findXY-within (car ndwl) (car (cdr ndwl)) pipemap)]
                     ]
                 ;; (printf "does neighbor ~a connect to ~s @ ~a\n" neighbor-can-connect-from shape-of-neighbor neighbor-dims)
-                ;; (printf "... ~a\n" (member neighbor-can-connect-from valid-connection-directions))
                 ;; (printf ",,, ~a\n" (is-shape-connected-in-dir shape-of-neighbor (opposite-dir-from neighbor-can-connect-from)))
                 (and
                   (member neighbor-can-connect-from valid-connection-directions) ; valid direction
@@ -172,22 +172,58 @@
             neighbor-dims-with-labels)
     ))
 
-(define (traverse-pipes pipemap current-positions)
-  (printf "\ncrawling around... ~a\n" current-positions)
-; ... examine all neighbors... look for Pipe Atoms 'F '7 'J 'L '- '!
-; ... ... ? if there are no new neighbors, we're at the end!!
-; ... ... : create nodes for the (New!) Neighbors
-; ... ... : link the new Neighbor Nodes to this Node...
-; ... ... : now the new nodes are cursors, and this cursor is dunzo
-  (let [[next-positions (find-connectable-pipes (car xy)
-                                                (car (cdr xy))
-                                                pipemap)]]
-    (printf "... ~s connectable neighbors\n" (length next-positions))
-    ; gotta tag & filter out what we've been to already...
-    )
-  )
+(define strip-label (λ (neighbor-labeled)
+                      ;; (printf "strip-label... ~s \n" neighbor-labeled)
+                      (reverse (list-tail (reverse neighbor-labeled) 1))))
 
-(let* [[input (square-with-detritus)]
+(define (unwrap_ lol unwrapped)
+  (if (empty? lol)
+    (reverse unwrapped)
+    (let [[top-list (car lol)]
+          [remaining (cdr lol)]]
+      (unwrap_ remaining
+               (append (reverse top-list)
+                       unwrapped)))))
+(define (unwrap list-of-lists) ; NOTE no de-duping...
+  ; input:  (   ((a b) (1 2 3))    ((4 5) (c d) (e))    ((z y x) (e)) ))
+  ; output: (         (a b) (1 2 3) (4 5) (c d) (e) (z y x) (e)        )
+  (cond
+    [(not (list? list-of-lists))
+     'error-malformed]
+    [(empty? list-of-lists)
+     '()]
+    [(not (list? (car list-of-lists)))
+     'error-malformed-still]
+    [else
+      (unwrap_ list-of-lists '())])
+  )
+(define (traverse-pipes_ pipemap current-positions visited-nodes distance-from-root)
+  ; potential optimization: keep visited-nodes sorted?
+  ;; (printf "\ncrawling @ ~a … ~a away\n" current-positions distance-from-root)
+  ;; (printf "visited... ~v \n" visited-nodes)
+  ;; (printf "current... ~v \n" current-positions)
+  (let* [
+         [neighbors-labeled
+           (unwrap
+             (map
+               (λ (xy) (find-connectable-pipes (car xy) (car (cdr xy)) pipemap))
+               current-positions))]
+         [unvisited-neighbors
+              (map strip-label
+                   (filter (λ (nb) (not (member (list (car nb) (car (cdr nb))) visited-nodes)))
+                           neighbors-labeled))]
+         ]
+    ;; (printf "~a unvisited neighbors (~a total)\n" (length unvisited-neighbors) (length neighbors-labeled))
+    ;; (printf "... ~a \n" unvisited-neighbors)
+    (if (empty? unvisited-neighbors)
+         `(,distance-from-root ,current-positions)
+         (traverse-pipes_ pipemap
+                          unvisited-neighbors
+                          (append visited-nodes current-positions)
+                          (+ 1 distance-from-root)
+                          ))))
+
+(let* [[input (square-with-detritus)] ; sample-input-bare
        [pipemap (process-input-lists (split-input input))]
        [start-point (find-start pipemap)]
        [start-X (car start-point)]
@@ -195,10 +231,14 @@
        ]
   (printf ">>>>>>> map \n~a \n\n" (format-pipemap pipemap))
   (printf ">>>>>>> start point \n>>> ~a\n\n" start-point)
-  ;; (printf "neighbors... \n")
-  ;; (pretty-print (adjacent-dims-with-labels 1 1 pipemap))
-  ;; (find-connectable-pipes start-X start-Y pipemap)
-  (traverse-pipes pipemap (list start-X start-Y))
+  (let* [[result (traverse-pipes_ pipemap (list (list start-X start-Y)) '() 0) ]
+         [distance (car result)]
+         [furthest-points (cdr result)]
+         ]
+    (printf "\nhere's what we got... ~a away: ~a \n"
+            distance
+            furthest-points))
+
 
   ;; (printf ">>> sample <<<\n~a\n\n" (format-pipemap pipemap))
   ;; (printf "\t>\t>\t>\tFULL\t<\t<\t<\n~a" (format-pipemap (process-input-lists (split-input (full-input)))))

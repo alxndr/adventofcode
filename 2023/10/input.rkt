@@ -1,6 +1,7 @@
 #lang racket
 
 (provide sample-input
+         sample-input-bare
          basic-square
          square-with-detritus
          full-input
@@ -25,7 +26,7 @@ _______
 _______
 )
 
-(define (basic-square)
+(define (basic-square) ; NOTE no starting S
   #<<_______
 .....
 .F-7.

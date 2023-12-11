@@ -48,6 +48,23 @@
         (check-equal? (adjacent-dims-with-labels 2 2 '((1 2 3) (4 5 6) (7 8 9))) '((2 1 above) (1 2 left)))
         )
       )
+
+    (test-suite
+      "unwrap"
+      (test-case
+        "error checking"
+        (check-equal? (unwrap 'foo) 'error-malformed)
+        (check-equal? (unwrap '(foo)) 'error-malformed-still))
+      (test-case "empty" (check-equal? (unwrap '()) '()))
+      (test-case
+        "multiple"
+        (check-equal?
+          (unwrap '(   ((a b) (1 2 3))    ((4 5) (c d) (e))    ((z y x) (e)) ))
+          '((a b) (1 2 3) (4 5) (c d) (e) (z y x) (e))))
+      )
+
+
+
     )
 
   )
