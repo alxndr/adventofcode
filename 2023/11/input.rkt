@@ -2,7 +2,7 @@
 
 (provide sample-input
          sample-input-expanded
-         full-input)
+         full-input-expanded)
 
 (define (sample-input)
   #<<_______
@@ -27,13 +27,17 @@ _______
 
 (define (sample-input-expanded)
   ; run in shell ahead of time...
-  ; $ ./preprocess.bash >sample-preprocessed.txt 2>sample-stats.ssv
+  ; $ ./preprocess.bash sample.txt >sample-preprocessed.txt 2>sample-stats.ssv
   (list
     (file->lines "./sample-preprocessed.txt")
     (file->lines "./sample-stats.ssv")
     )
   )
 
-(define (full-input)
-  'TODO-read-from-file ; input.txt
+(define (full-input-expanded)
+  ; $ ./preprocess.bash input.txt >input-preprocessed.txt 2>input-stats.ssv
+  (list
+    (file->lines "./input-preprocessed.txt")
+    (file->lines "./input-stats.ssv")
+    )
 )

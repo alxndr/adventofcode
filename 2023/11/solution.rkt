@@ -4,8 +4,8 @@
          process-the-line
          process-input-lists
          format-universe
-         expand-universe
-         solve-part1-preprocessed)
+         solve-part1-preprocessed
+         solve-part2-preprocessed)
 
 (require "input.rkt"
          "../10/solution.rkt")
@@ -93,54 +93,16 @@
     latoms
     (build-list (length latoms) (λ (_) 2))))
 
-(define (expand-universe-columns_ partially-expanded-llatoms y expanded)
-  (if (>= y (length (car partially-expanded-llatoms)))
-    expanded
-    'TODO-else))
-(define (expand-universe-rows_ llatoms partially-expanded)
-  (if (empty? llatoms)
-    (reverse partially-expanded)
-    (expand-universe-rows_ (cdr llatoms)
-                           (cons (something (car llatoms))
-                                 partially-expanded))))
-(define (expand-universe llatoms)
-  (expand-universe-columns_
-    (expand-universe-rows_ llatoms
-                           '())
-    0
-    '()))
-
-;; (define (solve-part1 input-raw)
-;;   (define input (split-input input-raw))
-;;   (define processing-results (process-input-lists input))
-;;   (define universe (car processing-results))
-;;   (define interesting (car (cdr processing-results)))
-;;   (printf "input... \n") (pretty-print input)
-;;   (printf "universe \n~a\n" (format-universe universe))
-;;   (printf "interesting spots: ~a \n" (length interesting))
-;;   (pretty-print interesting)
-;;   (printf "expanded... \n~a \n" (format-universe (expand-universe universe)))
-;;   (printf "don't need to expand if we're using preprocessed...\n\n")
-;;
-;;   ; convert each char to something else...
-;;   ; all the periods to 1s
-;;   ; # to 'X ... keep track of where we are in the list (x y) and log each of these...
-;;   ; then with each of interesting-input...
-;;   ; ...pair up it and each of the others (permutations??)
-;;   ; ...find distance from it to the other — adding one for each fully-empty row/column
-;;   ; ...and sum it up with all theother distances
-;;   )
-
-(define (how-many-extras-in-dimension start end extras)
+(define (how-many-extras-in-dimension start end extras multiplier)
   (apply +
          (map (λ (extra)
                 (if (or (and (start . < . extra) (extra . < . end))
                         (and (start . > . extra) (extra . > . end)))
-                  1
+                  (multiplier . - . 1)
                   0))
               extras)))
 
-(define (calc-distance route stats)
+(define (calc-distance route stats multiplier)
   (define start (car route))
   (define end   (car (cdr route)))
   (define extra-cols (map string->number (cdr (car stats))))
@@ -152,9 +114,9 @@
         ]
     (+
       (abs (- startX endX))
-      (how-many-extras-in-dimension startX endX extra-cols)
+      (how-many-extras-in-dimension startX endX extra-cols multiplier)
       (abs (- startY endY))
-      (how-many-extras-in-dimension startY endY extra-rows)
+      (how-many-extras-in-dimension startY endY extra-rows multiplier)
       )
     ))
 
@@ -172,7 +134,23 @@
      (λ (route-and-distance) (car (cdr route-and-distance)))
      (map (λ (interesting-route)
             (list interesting-route
-                  (calc-distance interesting-route input-stats)))
+                  (calc-distance interesting-route input-stats 2)))
           interesting-routes)
      ))
 )
+
+(define (solve-part2-preprocessed input-expanded multiplier)
+  (define input-lists (car input-expanded))
+  (define input-stats (map string-split (car (cdr input-expanded))))
+  (define processing-results (process-input-lists input-lists))
+  (define universe (car processing-results))
+  (define interesting-spots (car (cdr processing-results)))
+  (define interesting-routes (combinations interesting-spots 2))
+  (apply + (map
+     (λ (route-and-distance) (car (cdr route-and-distance)))
+     (map (λ (interesting-route)
+            (list interesting-route
+                  (calc-distance interesting-route input-stats multiplier)))
+          interesting-routes)
+     ))
+  )

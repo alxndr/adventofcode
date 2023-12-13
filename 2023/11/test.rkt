@@ -44,44 +44,34 @@
                    (format-universe '((1 1) (@ 1)))
                    "  \nX ")))
 
-    (test-suite
-      "expand-universe"
+    (test-suite "solutions"
 
-      ;; (test-case
-      ;;   "basic"
-      ;;   (check-equal?
-      ;;     (expand-universe
-      ;;       '((1 1 @)
-      ;;         (1 @ 1)
-      ;;         (1 1 1)))
-      ;;     '((2 1 @)
-      ;;       (2 @ 1)
-      ;;       (2 2 2)))
-      ;;   )
+      (test-suite "part 1"
+        (test-case "preprocessed sample" (check-equal? (solve-part1-preprocessed (sample-input-expanded)) 374))
+        (test-case "preprocessed full" (check-equal? (solve-part1-preprocessed (full-input-expanded)) 10228230))
+        )
 
-      )
+      (test-suite "part 2"
 
-    (test-suite
-      "solutions"
-
-      ;; (test-suite
-      ;;   "part 1"
-      ;;   (test-case
-      ;;     "sample"
-      ;;     (check-equal?
-      ;;       (solve-part1 (sample-input))
-      ;;       374)
-      ;;     )
-      ;;   )
-
-      (test-suite
-        "part 1"
-        (test-case
-          "preprocessed sample"
+        (test-case "preprocessed sample"
           (check-equal?
-            (solve-part1-preprocessed (sample-input-expanded))
-            374)
+            (solve-part2-preprocessed (sample-input-expanded) 10)
+            1030)
           )
+
+        (test-case "preprocessed sample"
+          (check-equal?
+            (solve-part2-preprocessed (sample-input-expanded) 100)
+            8410)
+          )
+
+        (test-case "preprocessed full"
+          (check-equal?
+            (solve-part2-preprocessed (full-input-expanded) 1000000)
+            1)
+          )
+
+
         )
 
       )
