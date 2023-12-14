@@ -1,0 +1,21 @@
+#lang racket
+
+(provide sample-input
+         full-input)
+
+(define (sample-input)
+  (string-split
+    #<<_______
+???.### 1,1,3
+.??..??...?##. 1,1,3
+?#?#?#?#?#?#?#? 1,3,1,6
+????.#...#... 4,1,1
+????.######..#####. 1,6,5
+?###???????? 3,2,1
+_______
+  "\n")
+)
+
+(define (full-input)
+  (file->lines "./input.txt")
+)
