@@ -1,0 +1,10 @@
+{
+ "name": "adventofcode-2021-15",
+ "main": "15.mjs",
+ "scripts": {
+  "test": "exit 1"
+ },
+ "dependencies": {
+  "line-reader": "^0.4.0"
+ }
+}
