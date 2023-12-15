@@ -40,7 +40,7 @@
         "sample-input"
         (check-equal?
           (solve-part1 (full-input))
-          1320)
+          515210)
         )
 
       )
