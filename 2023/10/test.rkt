@@ -5,6 +5,8 @@
          rackunit
          rackunit/text-ui)
 
+
+(printf "running tests...\n")
 (run-tests
 
   (test-suite
@@ -63,7 +65,24 @@
           '((a b) (1 2 3) (4 5) (c d) (e) (z y x) (e))))
       )
 
+    (test-suite
+      "solutions"
 
+      (test-suite "part 1"
+        (test-case "sample input" (check-equal? (solve-part1 (sample-input)) 8))
+        (test-case "full input" (check-equal? (solve-part1 (full-input)) 6778)))
+
+      (test-suite
+        "part 2"
+        (test-case
+          "sample input"
+          (check-equal? (solve-part2 (sample-input)) 10))
+        ;; (test-case
+        ;;   "full input"
+        ;;   (check-equal? (solve-part2 (full-input)) 'unknown))
+        )
+
+      )
 
     )
 

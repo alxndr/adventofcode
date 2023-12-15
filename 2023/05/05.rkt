@@ -114,17 +114,65 @@
                                                      seed-location-result
                                                      lowest-location))))))))
 
+(define mapping-spec-to-rangeshift
+  (lambda (mapping-spec)
+    (let* ([srs (hash-ref (car mapping-spec) 'SourceRangeStart)]
+          [dst (hash-ref (car mapping-spec) 'DestinationRangeStart)]
+          [len (hash-ref (car mapping-spec) 'RangeLength)])
+    (hash 'Range `(,srs ,(+ srs (- len 1)))
+          'Shift (- dst srs)))))
+
+(define r-process-mapping
+  (lambda (oom-mapping-list processed)
+    (printf "~a\n" oom-mapping-list)
+    (if (empty? oom-mapping-list)
+      processed
+      (let ([pop (car oom-mapping-list)]
+            [therest (cdr oom-mapping-list)])
+        (r-process-mapping therest (cons (mapping-spec-to-rangeshift pop)
+                                         processed))))
+    ))
+(define r-reprocess-mappings
+  (lambda (original-order-mappings processed-mappings)
+    (if (empty? original-order-mappings)
+      processed-mappings
+      (let* ([oom (car original-order-mappings)]
+             [rest-mappings (cdr original-order-mappings)]
+             [oom-name (car oom)]
+             [oom-mapping-list (cdr oom)])
+        (printf "\n~a... \n" oom-name)
+        (r-reprocess-mappings rest-mappings
+                              (cons (r-process-mapping oom-mapping-list '())
+                                    processed-mappings))))))
+(define reprocess-mappings
+  (lambda (original-order-mappings)
+    (r-reprocess-mappings original-order-mappings '())))
+
 (let* ([built-state (reverse (loop-input '()))]
-       [seeds (map string->number (car built-state))]
-       [mappings (cdr built-state)])
-  ;; (printf "seeds... ~a \n" seeds)
+       [seeds-numbers (map string->number (car built-state))]
+       [mappings (cdr built-state)] ; these are in order of the input
+       )
   (if (equal? part 1)
 
-    (printf "\npart 1: calculate locations, lowest with my sample data should be 35 == ~a\n" (apply min (map (lambda (seed) (r-calculate-seed-results seed mappings)) seeds)))
+    (printf "\npart 1: calculate locations, lowest with my sample data should be 35 == ~a\n"
+            (apply min (map (lambda (seed) (r-calculate-seed-results seed mappings)) seeds-numbers)))
 
-    (let ()
-      (printf "\npart 2: calculate location from seed specified at top of range, compare to previous smallest location, recurse by decrementing range\n")
-      (r-calculate-location-with-seed-ranges
-        mappings
-        seeds
-        #f))))
+    (let ([mappings-reprocessed (reprocess-mappings mappings)])
+      (printf "\npart 2:...\n")
+      ; the implementation of part 1 swallows up way too much memory to be useful...
+      ; initial implementation here is to brute-force calculate every result for every input, but that takes per (seed-range-start seed-range-length) pairing...
+      ; 10 min.    10min tot
+      ; 20 min..   30min tot
+      ; 40 min.... 75min tot
+      ;
+      ;
+      ;
+      ;
+      ;         ...180min total
+      ;; (r-calculate-location-with-seed-ranges mappings seeds #f)
+
+      ; so based on the Map, can I tell which part of the Range will be the lowest Location???
+      ; preprocess the mappings into Range+Shift...
+      (printf "~a \n\n" mappings-reprocessed)
+      ; i peeked 🫣 start at the end and work backwards?!?
+      )))

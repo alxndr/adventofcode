@@ -2,11 +2,12 @@
 
 (provide split-input
          process-input-lists
-         ;find-start
          find-index
          findXY-within
          adjacent-dims-with-labels
-         unwrap)
+         unwrap
+         solve-part1
+         solve-part2)
 
 (require "input.rkt")
 ; assumptions about input:
@@ -223,25 +224,24 @@
                           (+ 1 distance-from-root)
                           ))))
 
-(let* [[input (square-with-detritus)] ; sample-input-bare
-       [pipemap (process-input-lists (split-input input))]
-       [start-point (find-start pipemap)]
-       [start-X (car start-point)]
-       [start-Y (car (cdr start-point))]
-       ]
-  (printf ">>>>>>> map \n~a \n\n" (format-pipemap pipemap))
-  (printf ">>>>>>> start point \n>>> ~a\n\n" start-point)
-  (let* [[result (traverse-pipes_ pipemap (list (list start-X start-Y)) '() 0) ]
+(define (solve-part1 input)
+  (define pipemap (process-input-lists (split-input input)))
+  ;; (printf ">>>>>>> map \n~a \n\n" (format-pipemap pipemap))
+  (define start-point (find-start pipemap))
+  ;; (printf ">>>>>>> start point \n>>> ~a\n\n" start-point)
+  (define start-X (car start-point))
+  (define start-Y (car (cdr start-point)))
+  (define result (traverse-pipes_ pipemap (list (list start-X start-Y)) '() 0) )
+  (let [
          [distance (car result)]
          [furthest-points (cdr result)]
          ]
-    (printf "\nhere's what we got... ~a away: ~a \n"
-            distance
-            furthest-points))
-
-
-  ;; (printf ">>> sample <<<\n~a\n\n" (format-pipemap pipemap))
-  ;; (printf "\t>\t>\t>\tFULL\t<\t<\t<\n~a" (format-pipemap (process-input-lists (split-input (full-input)))))
+    ;; (printf "\nhere's what we got... ~a away: ~a \n" distance furthest-points)
+    distance)
   )
+
+(define (solve-part2)
+  (printf "here we go part 2...\n\n")
+  #f)
 
 (printf "\n")

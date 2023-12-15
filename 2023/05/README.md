@@ -55,8 +55,22 @@ Rather than list every source number and its corresponding destination number on
 
 Consider again the example seed-to-soil map:
 
-50 98 2
-52 50 48
+50 98 2    => this will decrease! fr 98->(98+2-1)   delta: (50-98)=-48   (98 99 -48)
+52 50 48   => this one adds two, for 50–>(50+48-1)  delta: (52-50)=+02   (50 97 2)
+...so any input –>49 is untouched; 50-97 is right out; 98–99 is knocked down to 50–51
+
+
+light-to-temperature
+45 77 23  =>  (77 99  -32)
+
+temperature-to-humidity
+ 0 69  1  =>  (69 69  69)
+ 1  0 69  =>  ( 0 68   1)
+
+humidity-to-location:
+60 56 37 => (56 92   4)
+56 93  4 => (93 96 -37) <-- obv this range is better'n other... but if input is small???
+
 The first line has a destination range start of 50, a source range start of 98, and a range length of 2. This line means that the source range starts at 98 and contains two values: 98 and 99. The destination range is the same length, but it starts at 50, so its two values are 50 and 51. With this information, you know that seed number 98 corresponds to soil number 50 and that seed number 99 corresponds to soil number 51.
 
 The second line means that the source range starts at 50 and contains 48 values: 50, 51, ..., 96, 97. This corresponds to a destination range starting at 52 and also containing 48 values: 52, 53, ..., 98, 99. So, seed number 53 corresponds to soil number 55.
