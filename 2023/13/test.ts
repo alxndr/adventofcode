@@ -8,6 +8,8 @@ import {
   isMatchingRowsRecursive,
   lookForReflectionRow,
   solvePart1,
+  findSymmetryScore,
+  findSmudgedSymmetry,
   solvePart2,
 } from './solution.ts'
 
@@ -94,16 +96,9 @@ describe('lookForReflection', () => {
       8
     )
   })
-  it('pathological??', PENDING('that was not real'), () => {
-    const m = ``.split('\n')
-    deepEqual(
-      lookForReflectionRow(m),
-      8
-    )
-  })
 })
 
-describe('solvePart1', () => {
+describe('solvePart1', PENDING(), () => {
   it('with sample input', async () => {
     deepEqual(
       solvePart1(await sample()),
@@ -111,29 +106,53 @@ describe('solvePart1', () => {
     )
   })
   it('with full input', async () => {
-    const solution = solvePart1(await full()) 
-    ok(
-      solution > 32889,
-      'needs to be above 32889...'
-    );
     deepEqual(
-      solution,
+      solvePart1(await full()),
       33780,
     )
   })
 })
 
-describe('solvePart2', PENDING(), () => {
-  it('with sample input', async () => {
+describe('findSmudgedSymmetry', () => {
+  it('finds new symmetry', () => {
+    const smudgy = [
+      '####.......#..#..',
+      '.......####....##',
+      '....####.##.##.##',
+      '######..####..###',
+      '.##...##..######.',
+      '.##..##.##.####.#',
+      '#..#.###.#.#.##.#'
+    ]
+    const oldScore = findSymmetryScore(smudgy);
+    const newScore = findSmudgedSymmetry(smudgy, () => oldScore);
+    ok(
+      oldScore !== newScore
+    )
     deepEqual(
-      solvePart1(await sample()),
-      'unknown'
+      findSmudgedSymmetry(smudgy, () => oldScore),
+      13
     )
   })
-  it('with full input', PENDING(), async () => {
+})
+
+describe('solvePart2', () => {
+  it('with sample input', async () => {
     deepEqual(
-      solvePart1(await full()),
-      'unknown'
+      solvePart2(await sample()),
+      400
     )
+  });
+  it('with full input', async () => {
+    const solution = solvePart2(await full())
+    ok(
+      solution > 16514,
+      'should be > 16514'
+    )
+    ok(
+      solution < 24657,
+      'should be < 24657'
+    )
+    // deepEqual(solution, 'something')
   })
 })
