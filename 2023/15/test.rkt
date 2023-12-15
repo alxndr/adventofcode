@@ -28,19 +28,25 @@
 
     (test-suite
       "solve-part1"
+      (test-case "sample-input" (check-equal? (solve-part1 (sample-input)) 1320))
+      (test-case "full-input" (check-equal? (solve-part1 (full-input)) 515210))
+      )
+
+    (test-suite
+      "solve-part2"
 
       (test-case
         "sample-input"
         (check-equal?
-          (solve-part1 (sample-input))
-          1320)
+          (solve-part2 (sample-input))
+          145)
         )
 
       (test-case
-        "sample-input"
+        "full-input"
         (check-equal?
-          (solve-part1 (full-input))
-          515210)
+          (solve-part2 (full-input))
+          246762)
         )
 
       )
