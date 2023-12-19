@@ -72,7 +72,7 @@
       )
 
     (test-case
-      "...part 2"
+      "part 2"
 
       (check-equal?
         (answer-sample)

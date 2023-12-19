@@ -3,13 +3,13 @@
 (provide sample-input
          full-input)
 
-(define (sample-input)
-  #<<_______
-_______
-)
+(define (extract-and-split filename)
+  (string-split
+    (car (file->lines filename))
+    ","))
 
+(define (sample-input)
+  (extract-and-split "sample.txt"))
 
 (define (full-input)
-  #<<_______
-_______
-)
+  (extract-and-split "input.txt"))
