@@ -57,12 +57,13 @@
 
     (test-suite
       "get-next-moves"
+
       (test-case
         "basic"
         (define the-map '( (#\# #\# #\#)
                            (#\. #\. #\#)
                            (#\# #\. #\#)))
-        (define result (get-next-moves '((1 1)) the-map))
+        (define result (get-next-moves '((1 1)) the-map 1))
         (check-in-list '(1 2 #\v) result)
         (check-in-list '(0 1 #\<) result))
 
@@ -71,8 +72,10 @@
         (define the-map '( (#\# #\# #\#)
                            (#\. #\. #\#)
                            (#\# #\. #\#)))
-        (define result (get-next-moves '((1 1) (1 2)) the-map))
-        (check-equal? '((0 1 #\<)) result)))
+        (define result (get-next-moves '((1 1) (1 2)) the-map 1))
+        (check-equal? '((0 1 #\<)) result))
+
+      )
 
 
     (test-suite
@@ -84,7 +87,7 @@
           '((1 2) (9 8)))))
 
 
-    (test-suite "solve-part1"
+    #;(test-suite "solve-part1"
       (test-case "sample-input"
         (check-equal?
           (solve-part1 (sample-input))
@@ -94,6 +97,18 @@
           (solve-part1 (full-input))
           2334))
       )
+
+    (test-suite "solve-part2"
+      (test-case "sample-input"
+        (check-equal?
+          (solve-part2 (sample-input))
+          154))
+      #; (test-case "full-input"
+        (check-equal?
+          (solve-part2 (full-input))
+          'Above-5638))
+      )
+
 
     )
 

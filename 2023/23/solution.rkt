@@ -48,10 +48,11 @@
       (list left  y #\<)
       (list right y #\>))))
 
-(define (get-next-moves route matrix)
+(define (get-next-moves route matrix part)
   (define last-XY (car route)) ; note order of moves in `route`, head is most recent move
   #; (printf "looking for moves from route: ~a \n" route)
   (define possibilities (get-neighboring-moves (car last-XY) (cadr last-XY) matrix))
+  #; (printf "gonna look for routes, using part ~a \n" part)
   (define (is-valid-move move-XYD)
     (define move-X   (car move-XYD))
     (define move-Y  (cadr move-XYD))
@@ -59,16 +60,14 @@
     (define tile-at-move (get-XY move-X move-Y matrix))
     (cond
       [(equal? tile-at-move #\#) ; filter out steps we can't take
-        #;(printf "it's a wall\n")
         #f]
       [(member (list move-X move-Y) route) ; filter out moves we've already made
-        #;(printf "already came from there\n")
         #f]
-      [(and (not (equal? tile-at-move #\.))
+      [(and (equal? part 1)                     ; only in part 1...
+            (not (equal? tile-at-move #\.))
             (not (equal? tile-at-move move-D))) ; filter out "steep slopes" uphill (only allow 'downhill' i.e. matching tiles)
-        #;(printf "whoa slopes wrong: ~a but ~a \n" move-D tile-at-move)
         #f]
-      [else ; haven't been there and: either it's a . or the slopes match
+      [else
         #t]))
   (filter is-valid-move
           possibilities))
@@ -103,7 +102,9 @@
 (define (find-longest-route_ matrix
                              routes ; routes is list, containing Route lists. each Route list is a list, containing XY Pairs
                              ending-row
-                             longest-trip)
+                             longest-trip
+                             [part 1])
+  (printf "longest route so far... ~a\n" longest-trip)
   (if (empty? routes)
     longest-trip
     (let [[top-route (car routes)]]
@@ -114,18 +115,20 @@
         (find-longest-route_ matrix
                              remaining-routes
                              ending-row
-                             (max longest-trip (- (length top-route) 1)))
+                             (max longest-trip (- (length top-route) 1))
+                             part)
 
-        (let [[next-moves (get-next-moves top-route matrix)]]
+        (let [[next-moves (get-next-moves top-route matrix part)]]
           #; (printf "next moves... ~a\n" next-moves) ; this should not include retraced steps...
-          (define next-routes (build-routes_ top-route next-moves '()))
+          #; (define next-routes (build-routes_ top-route next-moves '()))
           #; (printf "top route x those move(s):\n~a\n\n" (map strip-off-dirs next-routes))
           #; (printf "now routes is... \n~a\n" (append (map strip-off-dirs next-routes) remaining-routes))
           #; (read)
           (find-longest-route_ matrix
-                               (append (map strip-off-dirs next-routes) remaining-routes)
+                               (append (map strip-off-dirs (build-routes_ top-route next-moves '())) remaining-routes)
                                ending-row
-                               longest-trip)
+                               longest-trip
+                               part)
           )))
     )
   )
@@ -137,8 +140,14 @@
     input
     (list (list startingXY))
     ending-row
-    0)
- )
+    0))
 
 (define (solve-part2 input)
-  'TODO-part2)
+  (define startingXY '(1 0))
+  (define ending-row (- (length input) 1))
+  (find-longest-route_
+    input
+    (list (list startingXY))
+    ending-row
+    0
+    2))
