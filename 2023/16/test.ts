@@ -1,5 +1,5 @@
 import {inputSample, inputFull} from './input.ts'
-import {countEnergizedTiles, inputToMatrix} from './solution.ts'
+import {countEnergizedTiles, countMostEnergizedTiles, inputToMatrix} from './solution.ts'
 
 const IS_DEBUGGING = Boolean(process.env.IS_DEBUGGING) || false
 
@@ -13,6 +13,8 @@ if (!IS_DEBUGGING) {
   console.log('inputMatrix tests successful...\n')
 }
 
+console.log('part 1...\n')
+
 if (!IS_DEBUGGING) {
   const sampleEnergizedCount = await countEnergizedTiles(inputSample)
   console.assert(sampleEnergizedCount === 46, `sample input should have 46 energized tiles, but saw: ${sampleEnergizedCount}`)
@@ -21,5 +23,17 @@ if (!IS_DEBUGGING) {
 
 const fullEnergizedCount = await countEnergizedTiles(inputFull)
 console.assert(fullEnergizedCount > 46, `full input should have lots of energized tiles, but saw: ${fullEnergizedCount}`)
-console.assert(fullEnergizedCount !== 6674, `full input energized count should not be === 6674...`)
+console.assert(fullEnergizedCount === 7498, `full input energized count should === 7498... but saw ${fullEnergizedCount}`)
 console.log(`inputFull test: ${fullEnergizedCount}\n`)
+
+console.log('\npart2...\n')
+
+if (!IS_DEBUGGING) {
+  const mostEnergizedCountSample = countMostEnergizedTiles(inputSample)
+  console.assert(mostEnergizedCountSample === 51, `sample input should have 51 energized tiles, but saw: ${mostEnergizedCountSample}`)
+  console.log(`inputSample test: ${mostEnergizedCountSample}\n`)
+}
+
+const mostEnergizedCountFull = countMostEnergizedTiles(inputFull)
+console.assert(mostEnergizedCountFull > 51, `sample input should have > 51 energized tiles, but saw: ${mostEnergizedCountFull}`)
+console.log(`inputFull test: ${mostEnergizedCountFull}\n`)
