@@ -1,0 +1,15 @@
+{
+  "name": "advent-of-code-2023",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "day16": "ts-node 16/test.ts"
+  },
+  "author": "alxndr",
+  "type": "module",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}

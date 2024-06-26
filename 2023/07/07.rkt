@@ -45,7 +45,7 @@
                                                accumulator)))))
 
 (define (hand-to-type-num sorted-by-count) ; return val: bigger number is more winningest
-  ;; (printf "sorted-by-count... ~a \n" sorted-by-count)
+  (printf "sorted-by-count... ~a \n" sorted-by-count)
   (match sorted-by-count
     [(list (list _ 5)                ) 55] ; 5 of a kind
     [(list (list _ 4)            _...) 44] ; 4 of a kind
@@ -104,7 +104,7 @@
             sorted-by-count)))
       )
 
-#| (define (compare-hands hand-a hand-b) ; NOTE this is *Actual* poker ranking (i.e. order independent...)
+#; (define (compare-hands hand-a hand-b) ; NOTE this is *Actual* poker ranking (i.e. order independent...)
   ;; (printf "\ncomparing hands ~a ...&... ~a ?? \n" hand-a hand-b)
   (let* [[a-ranked (hand-to-type hand-a)]
          [b-ranked (hand-to-type hand-b)]
@@ -118,7 +118,7 @@
              [b-first-card-value (car (car b-ranked-cards))] ]
         (< a-first-card-value
            b-first-card-value))
-      (< a-ranked-type b-ranked-type)))) |#
+      (< a-ranked-type b-ranked-type))))
 
 (define (camel-compare a b)
   (if (or (empty? a) (empty? b))
@@ -216,10 +216,7 @@
   )
 
 (define (answer-sample)
-  (answer-with-input input-sample))
-; 5905 correct
+  (answer-with-input input-sample)) ; 5905 correct
 
 (define (answer-full)
-  (answer-with-input input-large))
-; 253997357 too high
-; 253552043 too high
+  (answer-with-input input-large)) ; 253552043 too high

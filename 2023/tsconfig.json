@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "module": "nodenext",
     "esModuleInterop": true,
     "noImplicitAny": true,
@@ -7,6 +8,9 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "target": "es2020"
+  },
+  "ts-node": {
+    "esm": true
   },
   "include": ["**/*.ts"],
   "exclude": ["**/*.spec.ts"]
