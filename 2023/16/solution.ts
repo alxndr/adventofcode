@@ -41,7 +41,7 @@ class Contraption {
   }
   tick():void {
     // console.log('tick...')
-    this.photons = this.photons.reduce((ps:Array<Photon|Photon[]>, p) => {
+    this.photons = this.photons.reduce((ps:Photon[], p) => {
       // console.log({count:ps.length, p})
       const isInitialPhoton = (p.x === -1 && p.y === 0)
       if (!isInitialPhoton && this.energizedTiles[p.y][p.x].includes(p.dir))
@@ -204,7 +204,7 @@ class ContraptionPart2 {
     this.photons = [initialPhoton]
     this.energizedTiles = new Array(this.gridHeight).fill(null).map(_ => new Array(this.gridWidth).fill(null).map(_ => []))
     while (this.photons.length) {
-      this.photons = this.photons.reduce((ps:Array<Photon|Photon[]>, p) => {
+      this.photons = this.photons.reduce((ps:Photon[], p) => {
         if (p !== this.initialPhoton && this.energizedTiles[p.y][p.x].includes(p.dir))
           return ps // we have already been here in this direction
         if (p !== this.initialPhoton) // otherwise, mark that we have been in this direction
