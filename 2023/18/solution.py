@@ -8,7 +8,7 @@ Advent Of Code https://adventofcode.com
 >>> part1(full())
 62365
 
-#>>> part2(sample())
+>>> part2(sample())
 952408144115
 """
 
@@ -32,12 +32,10 @@ def shift_down(plan, how_many): ### digging up past the top of the map
     ### no return value; modifying plan in-place (pass-by-reference)
 
 def shift_right(plan, how_many): ### digging left past the edge of the map
-    # debug('shift right… %s' % how_many)
     new_width = len(plan[0]) + how_many
     for line in plan:
         for _ in range(0, how_many):
             line.insert(0, '.')
-        # debug(line)
     ### no return value; modifying plan in-place (pass-by-reference)
 
 def print_plan(plan):
@@ -48,7 +46,6 @@ def follow_instructions(dig_instructions):
     current_x, current_y = 0, 0
     max_x, max_y = 0, 0
     for dig_instruction in dig_instructions:
-        # debug('\n\t@ %s : %s' % ((current_x, current_y), ' '.join(dig_instruction)))
         direction, distance = dig_instruction[0], int(dig_instruction[1])
         match direction:
             case 'R':
@@ -96,7 +93,13 @@ def follow_instructions(dig_instructions):
 def part1(input):
     dig_instructions = process(input)
     dig_plan = follow_instructions(dig_instructions)
-    # print_plan(dig_plan)
+    return count_interior(dig_plan)
+
+def part2(input):
+    dig_instructions = process2(input)
+    debug(dig_instructions)
+    dig_plan = follow_instructions(dig_instructions) # TODO this is not gonna work...
+    debug(f'dig plan is {len(dig_plan[0])} wide x {len(dig_plan)} tall...')
     return count_interior(dig_plan)
 
 def count_interior(plan):
@@ -167,16 +170,38 @@ def count_interior(plan):
 def process(input):
     """
     Process lines of input text into tuples.
-
-    >>> process(['R 6 #abc123'])
-    [('R', '6', '#abc123')]
+    >>> process(['R 6 (#abc123)'])
+    [('R', '6', '(#abc123)')]
     """
     return [tuple(str.split()) for str in input]
+
+def direction_as_numstr_to_str(dir_numstr):
+    match dir_numstr:
+        case '0': return 'R'
+        case '1': return 'D'
+        case '2': return 'L'
+        case '3': return 'U'
+        case   _: raise ValueError(f'Unexpected direction value: "{dir_numstr}"')
+
+def hex_code_to_instruction(hex_str):
+    distance_hexstr, dir_numstr = hex_str[:-1], hex_str[-1]
+    # debug(f'hex_str:{hex_str} … distance_hexstr:{distance_hexstr}, dir_numstr:{dir_numstr}')
+    return (direction_as_numstr_to_str(dir_numstr),
+            int(distance_hexstr, 16))
+
+def process2(input):
+    """
+    Process lines of input text into instruction tuple for part 2...
+    >>> process2(['R 6 (#70c710)', 'foo bar (#0dc571)', 'baz quux (#015232)'])
+    [('R', 461937), ('D', 56407), ('L', 5411)]
+    """
+    from re import sub
+    return [hex_code_to_instruction(sub(r'^.*\(#(.{6})\)$', r'\1', str)) for str in input]
 
 def sample():
     """
     Return the sample input.
-    >>> sample()[0].strip()
+    >>> sample()[0]
     'R 6 (#70c710)'
     """
     return file_contents('./sample.txt')
@@ -184,7 +209,7 @@ def sample():
 def full():
     """
     Return the sample input.
-    >>> full()[0].strip()
+    >>> full()[0]
     'R 4 (#2dbea0)'
     """
     return file_contents('./input.txt')
@@ -193,7 +218,7 @@ def file_contents(filename):
     fh = open(filename, 'r')
     input = fh.readlines()
     fh.close
-    return input
+    return [s.strip() for s in input]
 
 if __name__ == "__main__":
     import doctest
