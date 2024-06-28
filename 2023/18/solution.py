@@ -5,8 +5,11 @@ Advent Of Code https://adventofcode.com
 #>>> part1(sample())
 62
 
-#>>> part1(full())
-'foo'
+>>> part1(full())
+62365
+
+#>>> part2(sample())
+952408144115
 """
 
 def debug(str):
@@ -40,12 +43,11 @@ def shift_right(plan, how_many): ### digging left past the edge of the map
 def print_plan(plan):
     debug('\n'.join([''.join(line) for line in plan]) + '\n')
 
-def part1(input):
-    processed = process(input)
+def follow_instructions(dig_instructions):
     dig_plan = [['#']]
     current_x, current_y = 0, 0
     max_x, max_y = 0, 0
-    for dig_instruction in processed:
+    for dig_instruction in dig_instructions:
         # debug('\n\t@ %s : %s' % ((current_x, current_y), ' '.join(dig_instruction)))
         direction, distance = dig_instruction[0], int(dig_instruction[1])
         match direction:
@@ -89,7 +91,12 @@ def part1(input):
                 current_y = endpoint_y
             case _:
                 raise ValueError('Unexpected direction: "%s"' % direction)
-    print_plan(dig_plan)
+    return dig_plan
+
+def part1(input):
+    dig_instructions = process(input)
+    dig_plan = follow_instructions(dig_instructions)
+    # print_plan(dig_plan)
     return count_interior(dig_plan)
 
 def count_interior(plan):
@@ -110,7 +117,6 @@ def count_interior(plan):
     20
 
     Contiguous-to-the-edge can go 'around corners'...
-    ...this might need to be a proper graph traversal...
     >>> count_interior( \
             [ \
                 ['#', '#', '#', '#', '#', '#', '#', '#'], \
@@ -119,45 +125,43 @@ def count_interior(plan):
                 ['#', '.', '#', '#', '#', '#', '#', '#'], \
                 ['#', '.', '#', '.', '.', '.', '.', '#'], \
                 ['#', '.', '#', '.', '.', '.', '.', '#'], \
+                ['#', '.', '#', '.', '#', '#', '.', '#'], \
                 ['#', '.', '#', '#', '#', '#', '.', '#'], \
                 ['#', '.', '.', '.', '.', '#', '.', '#'], \
                 ['#', '.', '.', '.', '.', '#', '.', '#'], \
                 ['#', '.', '.', '.', '.', '#', '.', '#'], \
-                ['#', '.', '.', '.', '.', '#', '.', '#'], \
                 ['#', '#', '#', '#', '#', '#', '.', '#']])
-    78
+    81
     """
+    # print_plan(plan)
     plan_ht = len(plan)
     plan_wd = len(plan[0])
-    from math import ceil
-    plan_ht_midpt = ceil(plan_ht / 2)
-    plan_wd_midpt = ceil(plan_wd / 2)
-    # largest_dim = max(plan_ht, plan_wd)
-    for y in range(0, plan_ht_midpt):
-        for x in range(0, plan_wd_midpt):
-            ### erode top edge
-            if plan[y][x] == '.' and (y == 0 or plan[y-1][x] == ' '): # left side…
-                plan[y][x] = ' '
-            if plan[y][plan_wd - x - 1] == '.' and (y == 0 or plan[y-1][plan_wd - x - 1] == ' '): # …right side
-                plan[y][plan_wd - x - 1] = ' '
-            ### erode bottom edge
-            if plan[plan_ht - y - 1][x] == '.' and (y == 0 or plan[plan_ht - y][x] == ' '): # left side…
-                plan[plan_ht - y - 1][x] = ' '
-            if plan[plan_ht - y - 1][plan_wd - x - 1] == '.' and (y == 0 or plan[plan_ht - y][plan_wd - x - 1] == ' '): # …right side
-                plan[plan_ht - y - 1][plan_wd - x - 1] = ' '
-    for x in range(0, plan_wd_midpt):
-        for y in range(0, plan_ht_midpt):
-            ### erode left edge
-            if plan[y][x] == '.' and (x == 0 or plan[y][x-1] == ' '): # from the top…
-                plan[y][x] = ' '
-            if plan[plan_ht - y - 1][x] == '.' and (x == 0 or plan[plan_ht - y - 1][x-1] == ' '): # …from the bottom
-                plan[plan_ht - y - 1][x] = ' '
-            ### erode right edge
-            if plan[y][plan_wd - x - 1] == '.' and (x == 0 or plan[y][plan_wd - x] == ' '): # from the top…
-                plan[y][plan_wd - x - 1] = ' '
-            if plan[plan_ht - y - 1][plan_wd - x - 1] == '.' and (x == 0 or plan[plan_ht - y - 1][plan_wd - x] == ' '): # …from the bottom
-                plan[plan_ht - y - 1][plan_wd - x - 1] = ' '
-    print_plan(plan)
+    outside = [] # list of (x,y) coords that are outside and need to have their neighbors looked at
+    for x in range(0, plan_wd):
+        if plan[0][x] == '.':         ### mark top edge
+            outside.append((x, 0))
+        if plan[plan_ht-1][x] == '.': ### mark bottom edge
+            outside.append((x, plan_ht-1))
+    for y in range(0, plan_ht):
+        if plan[y][0] == '.':         ### mark left edge
+            outside.append((0, y))
+        if plan[y][plan_wd-1] == '.': ### mark right edge
+            outside.append((plan_wd-1, y))
+    # from sys import stderr
+    while len(outside):
+        # print(outside, file=stderr)
+        outside_x, outside_y = outside.pop()
+        # debug('outside: (%s,%s)' % (outside_x, outside_y))
+        plan[outside_y][outside_x] = ' '
+        if outside_y > 0 and plan[outside_y-1][outside_x] == '.':       ### check above
+            outside.append((outside_x,outside_y-1))
+        if outside_x > 0 and plan[outside_y][outside_x-1] == '.':       ### check left
+            outside.append((outside_x-1,outside_y))
+        if outside_y < plan_ht - 1 and plan[outside_y+1][outside_x] == '.': ### check below
+            outside.append((outside_x,outside_y+1))
+        if outside_x < plan_wd - 1 and plan[outside_y][outside_x+1] == '.': ### check right
+            outside.append((outside_x+1,outside_y))
+    # print_plan(plan)
     return len(list(filter(lambda v: v != ' ', [x for xs in plan for x in xs])))
 
 def process(input):
