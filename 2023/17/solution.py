@@ -4,71 +4,45 @@ Day 17: Clumsy Crucible
 
 >>> part1(sample())
 102
+
+>>> part1(full())
+102
 """
 
 from enum import Enum
 from copy import copy
+from math import log10
 
 def part1(input_arr):
     map = strings_to_numbers_arr(input_arr)
-    initial_path = Path(map)
-    working_paths = []
-    while not initial_path.isAtEnd():
-        # add potential moves from here to list of paths to explore
-        if initial_path.canMove(Dir.E):
-            new_path = Path(map, from_path=initial_path)
-            new_path.move(Dir.E)
-            working_paths.append(new_path)
-        if initial_path.canMove(Dir.S):
-            new_path = Path(map, from_path=initial_path)
-            new_path.move(Dir.S)
-            working_paths.append(new_path)
-        if initial_path.canMove(Dir.N):
-            new_path = Path(map, from_path=initial_path)
-            new_path.move(Dir.N)
-            working_paths.append(new_path)
-        if initial_path.canMove(Dir.W):
-            new_path = Path(map, from_path=initial_path)
-            new_path.move(Dir.W)
-            working_paths.append(new_path)
-        # do the moves for initial_path
-        if initial_path.canMove(Dir.E) and (len(initial_path.route) == 0 or initial_path.route[-1] == Dir.S):
-            initial_path.move(Dir.E)
-        elif initial_path.canMove(Dir.S) and initial_path.route[-1] == Dir.E:
-            initial_path.move(Dir.S)
-    lowest_value = initial_path.value
-    num_paths = 1
+    debug(f'got the map... {len(map[0])}x{len(map)}')
+    lowest_value = None
+    lowest_value_path = None
+    working_paths = [Path(map)]
+    visited = {} # coordinate tuple as key, value is: another dict, Dir as key, lowest-val as value
+    i = 0
     while len(working_paths):
-        num_paths += 1
-        if num_paths % 9999999 == 0:
-            debug(f'iteration {num_paths} ...')
-        # debug(f'remaining paths to investigate: #{len(working_paths)}')
         path = working_paths.pop()
-        if path.value > lowest_value:
-            # debug(f'throwing out {path}')
-            continue # no use continuing with this route
+        i += 1
+        if i % 100_000 == 0 or log10(i).is_integer():
+            debug(f'iteration {i}... workin with {len(working_paths)} paths... lowest value?? {lowest_value}')
         if path.isAtEnd():
-            if path.value < lowest_value:
-                debug(f'====> new lowest value!! {path} [{num_paths}]')
+            if lowest_value == None or path.value < lowest_value:
                 lowest_value = path.value
+                lowest_value_path = path
+                # debug(f'=[{i}]=>\tnew lowest!! {path}')
             continue
-        # add potential moves from here to list of paths to explore
-        if path.canMove(Dir.E):
-            new_path = Path(map, from_path=path)
-            new_path.move(Dir.E)
-            working_paths.append(new_path)
-        if path.canMove(Dir.S):
-            new_path = Path(map, from_path=path)
-            new_path.move(Dir.S)
-            working_paths.append(new_path)
-        if path.canMove(Dir.N):
-            new_path = Path(map, from_path=path)
-            new_path.move(Dir.N)
-            working_paths.append(new_path)
-        if path.canMove(Dir.W):
-            new_path = Path(map, from_path=path)
-            new_path.move(Dir.W)
-            working_paths.append(new_path)
+        for dir in Dir:
+            if path.canMove(dir):
+                new_path = Path(map, from_path=path)
+                new_path.move(dir)
+                if lowest_value != None and new_path.value > lowest_value:
+                    continue
+                if dir not in visited.setdefault(new_path.coords(), {}) \
+                or visited[new_path.coords()][dir] > new_path.value: # TODO note that this does not consider how many in-a-row moves lead up to this direction+value combo...
+                    visited[new_path.coords()][dir] = new_path.value
+                    working_paths.append(new_path)
+    debug(repr(lowest_value_path))
     return lowest_value
 
 def strings_to_numbers_arr(a):
@@ -79,12 +53,19 @@ def strings_to_numbers_arr(a):
     return [[int(num_str) for num_str in list(nums_str)] for nums_str in a]
 
 class Dir(Enum):
-    N = 'N'
     E = 'E'
     S = 'S'
     W = 'W'
+    N = 'N'
     def __repr__(self):
         return self.name
+    def __str__(self):
+        match self:
+            case Dir.E: return '→'
+            case Dir.S: return '↓'
+            case Dir.W: return '←'
+            case Dir.N: return '↑'
+            case _:     raise ValueError
 
 class Path:
     def __init__(self, map, **kwargs):
@@ -102,9 +83,28 @@ class Path:
             self.posY = 0
             self.value = 0
     def __repr__(self):
-        return f'Path @({self.posX},{self.posY}) v={self.value} … [{','.join([repr(d) for d in self.route])}]'
+        mapped = copy(self.map)
+        coordX = 0
+        coordY = 0
+        for move in self.route:
+            mapped[coordY][coordX] = str(move)
+            match move:
+                case Dir.E:
+                    coordX += 1
+                case Dir.S:
+                    coordY += 1
+                case Dir.W:
+                    coordX -= 1
+                case Dir.N:
+                    coordY -= 1
+                case _:
+                    raise ValueError
+        return '\n'.join([''.join([str(v) for v in line]) for line in mapped])
+    def __str__(self):
+        return f'Path v:{self.value} [{','.join([repr(d) for d in self.route])}]'
+    def coords(self):
+        return (self.posX, self.posY)
     def move(self, dir):
-        # debug(f'moving {dir}')
         match dir:
             case Dir.N:
                 self.posY -= 1
@@ -138,6 +138,12 @@ class Path:
             # can't go more than 3 steps in the same direction
             return False
         return True
+    def numOfIdenticalMoves(self):
+        if self.route[-3:-1] == self.route[-1:] * 2:
+            return 3
+        if self.route[-2:-1] == self.route[-1:]:
+            return 2
+        return 1
     def isAtEnd(self):
         return self.posX + 1 == self.map_wd and self.posY + 1 == self.map_ht
 
