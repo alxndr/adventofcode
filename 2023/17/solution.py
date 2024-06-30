@@ -5,44 +5,66 @@ Day 17: Clumsy Crucible
 >>> part1(sample())
 102
 
->>> part1(full())
-102
+184mil+ iterations and several minutes of runtime...
+##>>> part1(full())
+##665
+
+gonna need a bigger boat...
+>>> part2(sample())
+94
 """
 
 from enum import Enum
 from copy import copy
 from math import log10
+from random import sample as randomize
+
+def part2(input_arr):
+    map = strings_to_numbers_arr(input_arr)
+    return
 
 def part1(input_arr):
     map = strings_to_numbers_arr(input_arr)
-    debug(f'got the map... {len(map[0])}x{len(map)}')
-    lowest_value = None
-    lowest_value_path = None
-    working_paths = [Path(map)]
-    visited = {} # coordinate tuple as key, value is: another dict, Dir as key, lowest-val as value
+    if len(map) != len(map[0]):
+        raise Error('ruh roh we want to assume that the map is a square...') # this lets us create the initial_path as a diagonal
+    working_paths = []
+    visited = {} # coordinate tuple as key, value is: another dict, Dir as key, value is: another dict, num-of-consecutive-identical-moves as key, value is the lowest-seen heat-loss value for that combo of direction+number_of_consecutive_moves
+    initial_path = Crucible(map)
+    while not initial_path.isAtEnd():
+        working_paths.append(Crucible(map, from_path=initial_path))
+        # because we know the map is a square, we can skip the canMove checks and instead just alternate between Dir.E and Dir.S...
+        dir = Dir.E if len(initial_path.route) == 0 or initial_path.route[-1] == Dir.S else Dir.S
+        initial_path.move(dir)
+        visited.setdefault(initial_path.coords(), {})[dir] = {initial_path.numOfIdenticalMoves(): initial_path.value}
+    lowest_value = initial_path.value
+    lowest_value_path = initial_path
     i = 0
     while len(working_paths):
         path = working_paths.pop()
         i += 1
-        if i % 100_000 == 0 or log10(i).is_integer():
+        if i % 10_000_000 == 0 or (i < 10_000_000 and log10(i).is_integer()):
             debug(f'iteration {i}... workin with {len(working_paths)} paths... lowest value?? {lowest_value}')
         if path.isAtEnd():
             if lowest_value == None or path.value < lowest_value:
                 lowest_value = path.value
                 lowest_value_path = path
-                # debug(f'=[{i}]=>\tnew lowest!! {path}')
             continue
-        for dir in Dir:
+        for dir in randomize(list(Dir), len(Dir)):
             if path.canMove(dir):
-                new_path = Path(map, from_path=path)
+                new_path = Crucible(map, from_path=path)
                 new_path.move(dir)
                 if lowest_value != None and new_path.value > lowest_value:
                     continue
-                if dir not in visited.setdefault(new_path.coords(), {}) \
-                or visited[new_path.coords()][dir] > new_path.value: # TODO note that this does not consider how many in-a-row moves lead up to this direction+value combo...
-                    visited[new_path.coords()][dir] = new_path.value
+                coords = new_path.coords()
+                # if dir not in visited.setdefault(coords, {}):
+                #     visited[coords][dir] = {}
+                numMoves = new_path.numOfIdenticalMoves()
+                # if numMoves not in visited[coords][dir] or visited[coords][dir][numMoves] > new_path.value:
+                if numMoves not in visited.setdefault(coords, {}).setdefault(dir, {}) \
+                or visited[coords][dir][numMoves] > new_path.value:
+                    visited[coords][dir][numMoves] = new_path.value
                     working_paths.append(new_path)
-    debug(repr(lowest_value_path))
+    debug(f'{i} iterations to find lowest value: {lowest_value}, the path is {len(lowest_value_path.route)} steps long')
     return lowest_value
 
 def strings_to_numbers_arr(a):
@@ -67,7 +89,7 @@ class Dir(Enum):
             case Dir.N: return '↑'
             case _:     raise ValueError
 
-class Path:
+class Crucible:
     def __init__(self, map, **kwargs):
         self.map = map
         self.map_ht = len(map)
@@ -101,7 +123,7 @@ class Path:
                     raise ValueError
         return '\n'.join([''.join([str(v) for v in line]) for line in mapped])
     def __str__(self):
-        return f'Path v:{self.value} [{','.join([repr(d) for d in self.route])}]'
+        return f'Crucible v:{self.value} [{','.join([repr(d) for d in self.route])}]'
     def coords(self):
         return (self.posX, self.posY)
     def move(self, dir):
@@ -118,7 +140,7 @@ class Path:
             case Dir.W:
                 self.posX -= 1
                 self.value += self.map[self.posY][self.posX]
-            case _: raise ValueError(f'unexpected direction in Path#move: {dir}')
+            case _: raise ValueError(f'unexpected direction in Crucible move: {dir}')
         self.route.append(dir)
     def canMove(self, dir):
         match dir:
