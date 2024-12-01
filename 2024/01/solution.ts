@@ -2,7 +2,7 @@ import {open} from 'node:fs/promises'
 import assert from 'node:assert'
 import test from 'node:test'
 
-async function part1(filename) {
+async function part1(filename:string):Promise<number> {
   const fh = await open(filename)
 
   const leftList = []
@@ -12,7 +12,7 @@ async function part1(filename) {
     const [left, right] = line.split(/\s+/)
     leftList.push(Number(left))
     rightList.push(Number(right))
-    // optimization: keep sorted as we insert...
+    // potential optimization: keep sorted as we insert...
   }
 
   assert.equal(leftList.length, rightList.length,
@@ -37,9 +37,9 @@ test('part 1', async () => {
   assert.strictEqual(2164381, await part1('input.txt'))
 })
 
-async function part2(filename) {
-  const lhs = {}
-  const rhs = {}
+async function part2(filename:string):Promise<number> {
+  const lhs:Record<string,number> = {}
+  const rhs:Record<string,number> = {}
   for await (const line of (await open(filename)).readLines()) {
     const [left, right] = line.split(/\s+/)
     if (lhs.hasOwnProperty(left))
@@ -52,7 +52,7 @@ async function part2(filename) {
       rhs[right] = 1
   }
   let score = 0
-  for (const [n, count] of Object.entries(lhs)) {
+  for (const [n:string, count:number] of Object.entries(lhs)) {
     if (rhs.hasOwnProperty(n)) {
       score += Number(n) * rhs[n] * count
     }
