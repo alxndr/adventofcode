@@ -37,10 +37,30 @@ test('part 1', async () => {
   assert.strictEqual(2164381, await part1('input.txt'))
 })
 
-function part2(filename) {
+async function part2(filename) {
+  const lhs = {}
+  const rhs = {}
+  for await (const line of (await open(filename)).readLines()) {
+    const [left, right] = line.split(/\s+/)
+    if (lhs.hasOwnProperty(left))
+      lhs[left] += 1
+    else
+      lhs[left] = 1
+    if (rhs.hasOwnProperty(right))
+      rhs[right] += 1
+    else
+      rhs[right] = 1
+  }
+  let score = 0
+  for (const [n, count] of Object.entries(lhs)) {
+    if (rhs.hasOwnProperty(n)) {
+      score += Number(n) * rhs[n] * count
+    }
+  }
+  return score
 }
 
 test('part 2', async () => {
   assert.strictEqual(31, await part2('sample.txt'))
-  assert.strictEqual('unknown', await part2('input.txt'))
+  assert.strictEqual(20719933, await part2('input.txt'))
 })
