@@ -52,7 +52,7 @@ async function part2(filename:string):Promise<number> {
       rhs[right] = 1
   }
   let score = 0
-  for (const [n:string, count:number] of Object.entries(lhs)) {
+  for (const [n, count] of Object.entries(lhs)) {
     if (rhs.hasOwnProperty(n)) {
       score += Number(n) * rhs[n] * count
     }
