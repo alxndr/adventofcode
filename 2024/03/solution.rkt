@@ -1,8 +1,6 @@
 #lang racket
 
-(require "../advent-of-code-utils.rkt"
-         rackunit
-         rackunit/text-ui)
+(require "../advent-of-code-utils.rkt" threading rackunit rackunit/text-ui)
 
 ; TODO this calls for a real parser... but I know regexes more readily
 (define REGEX_MUL #px"mul\\((\\d+),(\\d+)\\)")
@@ -11,17 +9,22 @@
 (define (solve-part1 input)
   (for/sum ([line input])
     (for/sum ([mult-pair (regexp-match* REGEX_MUL line #:match-select cdr)])
-      (apply * (map string->number mult-pair)))))
+      (~> mult-pair
+          (map string->number _)
+          (apply * _)))))
 
 (define (strip-ignored str)
-  (apply string-append
-         (regexp-match* REGEX_DONT_SECTIONS str #:match-select #f #:gap-select? #t)))
+  (~> str
+      (regexp-match* REGEX_DONT_SECTIONS _ #:match-select #f #:gap-select? #t)
+      (apply string-append _)))
 
 (define (solve-part2 input)
   (let* ([stripped-input (strip-ignored (apply string-append input))]
          [mult-pairs (regexp-match* REGEX_MUL stripped-input #:match-select cdr)])
     (for/sum ([mult-pair mult-pairs])
-      (apply * (map string->number mult-pair)))))
+      (~> mult-pair
+          (map string->number _)
+          (apply * _)))))
 
 
 (run-tests
