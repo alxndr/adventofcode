@@ -5,11 +5,7 @@
          rackunit/text-ui)
 
 (define (solve-part1 input)
-  ; return the number of entries within `input` which are considered safe
-  (for/sum ([report input])
-    (if (acceptable-sequence? report)
-      1
-      0)))
+  (count acceptable-sequence? input))
 
 (define (out-of-bounds? diff)
   (or (> diff 3)
@@ -17,7 +13,7 @@
       (eq? diff 0)))
 
 (define (acceptable-sequence? sequence #:allow-single-removal [allow-single-removal #f])
-  (with-handlers ([exn:fail? ; TODO this is a bit awkward...
+  (with-handlers ([exn:fail? ; throwing an error within this function indicates an "unacceptable" sequence, rather than a true error... TODO would be good to do this without using actual exceptions
                     (if allow-single-removal
                       (λ (_) (for/or ([i (length sequence)]) ; potential optimization: only try removing the element which failed and its neighbors, rather than each element in the sequence...
                                      (acceptable-sequence? (remove-nth-element sequence i))))
@@ -46,10 +42,7 @@
               (values i dir)]))))))
 
 (define (solve-part2 input)
-  (for/sum ([report input])
-    (if (acceptable-sequence? report #:allow-single-removal #t)
-      1
-      0)))
+  (count (curry acceptable-sequence? #:allow-single-removal #t) input))
 
 (define (extract-and-split file-contents)
   (for/list ([line file-contents])
