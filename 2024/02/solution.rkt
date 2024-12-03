@@ -16,8 +16,18 @@
       (< diff -3)
       (eq? diff 0)))
 
-(define (acceptable-sequence? sequence)
-  (with-handlers ([exn:fail? (λ (_) #f)]) ; TODO this is a bit awkward...
+(define (remove-nth-element sequence n)
+  (flatten (cons
+             (take sequence n)
+             (drop sequence (+ 1 n)))))
+
+(define (acceptable-sequence? sequence #:allow-single-removal [allow-single-removal #f])
+  (with-handlers ([exn:fail? ; TODO this is a bit awkward...
+                    (if allow-single-removal
+                      (λ (_) (for/or ([i (length sequence)])
+                                     (let ([sequence-without-nth-element (remove-nth-element sequence i)])
+                                       (acceptable-sequence? sequence-without-nth-element))))
+                      (λ (_) #f))])
     (for/fold ([prev #f]
                [dir  #f]
                #:result #t)
@@ -45,7 +55,10 @@
               (values i dir)]))))))
 
 (define (solve-part2 input)
-  '())
+  (for/sum ([report input])
+    (if (acceptable-sequence? report #:allow-single-removal #t)
+      1
+      0)))
 
 (define (extract-and-split file-contents)
   (for/list ([line file-contents])
@@ -65,10 +78,19 @@
           (check-equal? (length split-input) 6))))
 
     (test-suite "acceptable-sequence?"
-      (test-case "increasing values: true"   (check-equal? (acceptable-sequence? '(1 2 3)) #t))
-      (test-case "decreasing values: true"   (check-equal? (acceptable-sequence? '(99 96 93 90)) #t))
-      (test-case "out-of-bounds step: false" (check-equal? (acceptable-sequence? '(99 96 93 89)) #f))
-      (test-case "zero step: false"          (check-equal? (acceptable-sequence? '(4 5 6 6 7 8)) #f)))
+      (test-case "increasing values: true"   (check-equal? (acceptable-sequence? '(1 2 3))
+                                                           #t))
+      (test-case "decreasing values: true"   (check-equal? (acceptable-sequence? '(99 96 93 90))
+                                                           #t))
+      (test-case "out-of-bounds step: false" (check-equal? (acceptable-sequence? '(99 96 93 89))
+                                                           #f))
+      (test-case "zero step: false"          (check-equal? (acceptable-sequence? '(4 5 6 6 7 8))
+                                                           #f))
+      (test-suite "with allow-single-removal"
+        (test-case "direction switch: true" (check-equal? (acceptable-sequence? #:allow-single-removal #t '(5 6 7 5 8 9))
+                                                          #t))
+      )
+    )
 
     (test-suite "part 1"
       (test-case "sample input"
@@ -81,14 +103,14 @@
           490)))
 
     (test-suite "part 2"
-      #; (test-case "sample input"
+      (test-case "sample input"
         (check-equal?
           (solve-part2 (extract-and-split (sample-input)))
-          #f))
-      #; (test-case "full input"
+          4))
+      (test-case "full input"
         (check-equal?
           (solve-part2 (extract-and-split (full-input)))
-          #f)))
+          536)))
 
   )
 )
