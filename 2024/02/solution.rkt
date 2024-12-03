@@ -17,9 +17,9 @@
       (eq? diff 0)))
 
 (define (remove-nth-element sequence n)
-  (flatten (cons
-             (take sequence n)
-             (drop sequence (+ 1 n)))))
+  (for/list ([index (length sequence)]
+             #:when (not (eq? n index)))
+    (list-ref sequence index)))
 
 (define (acceptable-sequence? sequence #:allow-single-removal [allow-single-removal #f])
   (with-handlers ([exn:fail? ; TODO this is a bit awkward...
@@ -76,6 +76,16 @@
         (let ([split-input (extract-and-split (sample-input))])
           (check-equal? (car split-input) '(7 6 4 2 1))
           (check-equal? (length split-input) 6))))
+
+    (test-suite "remove-nth-element"
+      (test-case "basic usage"
+        (check-equal? (remove-nth-element '(1 2 3 4 5) 0)
+                      '(2 3 4 5))
+        (check-equal? (remove-nth-element '(1 2 3 4 5) 2)
+                      '(1 2 4 5))
+      (test-case "when n is out of bounds"
+        (check-equal? (remove-nth-element '(1 2 3 4 5) 9)
+                      '(1 2 3 4 5)))))
 
     (test-suite "acceptable-sequence?"
       (test-case "increasing values: true"   (check-equal? (acceptable-sequence? '(1 2 3))
