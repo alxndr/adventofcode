@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/pretty
+(require "../advent-of-code-utils.rkt"
          rackunit
          rackunit/text-ui)
 
@@ -16,17 +16,11 @@
       (< diff -3)
       (eq? diff 0)))
 
-(define (remove-nth-element sequence n)
-  (for/list ([index (length sequence)]
-             #:when (not (eq? n index)))
-    (list-ref sequence index)))
-
 (define (acceptable-sequence? sequence #:allow-single-removal [allow-single-removal #f])
   (with-handlers ([exn:fail? ; TODO this is a bit awkward...
                     (if allow-single-removal
-                      (λ (_) (for/or ([i (length sequence)])
-                                     (let ([sequence-without-nth-element (remove-nth-element sequence i)])
-                                       (acceptable-sequence? sequence-without-nth-element))))
+                      (λ (_) (for/or ([i (length sequence)]) ; potential optimization: only try removing the element which failed and its neighbors, rather than each element in the sequence...
+                                     (acceptable-sequence? (remove-nth-element sequence i))))
                       (λ (_) #f))])
     (for/fold ([prev #f]
                [dir  #f]
@@ -34,20 +28,17 @@
               ([i sequence])
       (if (eq? prev #f)
 
-        ; 1st iteration
-        (values i #f)
+        (values i #f)                                         ; 1st iteration — establish `prev`, no way it can fail yet
 
-        (let ([diff (- i prev)])
+        (let ([diff (- i prev)])                              ; 2nd-or-later iterations...
           (cond
             [(out-of-bounds? diff)
              (error "difference is out of bounds:" diff)]
 
-            ; 2nd iteration — establish the `dir` for remaining iterations
-            [(eq? dir #f)
+            [(eq? dir #f)                                     ; 2nd iteration — establish the `dir` for remaining iterations
              (values i (if (> diff 0) 'positive 'negative))]
 
-            ; remaining iterations — check that `diff` is consistent with `dir`
-            [(or (and (eq? dir 'positive) (< diff 0))
+            [(or (and (eq? dir 'positive) (< diff 0))         ; later iterations — check that `diff` is consistent with `dir`
                  (and (eq? dir 'negative) (> diff 0)))
              (error "direction of change has changed, was:" dir "but diff is" diff)]
 
@@ -64,9 +55,6 @@
   (for/list ([line file-contents])
     (for/list ([str (string-split line)])
       (string->number str))))
-
-(define (sample-input) (file->lines "sample.txt"))
-(define (full-input)   (file->lines "input.txt"))
 
 (run-tests
   (test-suite "2024 day 2"
