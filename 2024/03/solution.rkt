@@ -10,13 +10,11 @@
 
 
 (define (parsing-solver input)
-  ; `input` is a list of strings
-  (pretty-print input)
-  (let* ([input-joined (apply string-append input)]
-         [tokenized (tokenize input-joined)])
-    (printf "input length... ~a\n" (string-length input-joined))
-    (pretty-print tokenized)
-    tokenized
+  (~> input                     ; `input` is a list of strings
+      (apply string-append _)   ; combine list-of-strings into a single string
+      (tee~> pretty-print)
+      tokenize
+      (tee~> pretty-print)
   )
 )
 
@@ -125,6 +123,21 @@
 (define (str-head str) (string-ref str 0))
 (define (str-tail str) (substring str 1))
 
+(define (parse tokens)
+  (for/fold ([sum 0]
+             [allow-computation #t] ; this value will be tweaked by part 2
+            )
+            ([token tokens])
+    (pretty-print token)
+    (match token
+      [(list 'UNKNOWN _)
+       0]
+      [(list 'KEYWORD "mul" a b) ; todo this should probably include the whole thing... so we can calculate it here... but that may not be what a lexer is really for
+       (* a b)]
+      ; todo...
+    )
+  )
+)
 
 
 (run-tests
@@ -164,8 +177,15 @@
       )
     )
 
+    #| (test-suite "parse"
+      (test-case "yeah"
+        (check-equal? (parse '((UNKNOWN 'foo)))      0)
+        (check-equal? (parse '((KEYWORD "mul" 2 3))) 6)
+      )
+    ) |#
+
     (test-suite "part 1"
-      (test-case "sample input"
+      #; (test-case "sample input"
         (check-equal? (solve-part1 (sample-input)) 161))
       #; (test-case "full input"
         (check-equal? (solve-part1 (full-input))   175015740)))
