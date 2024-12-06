@@ -1,6 +1,6 @@
 #lang racket
 
-; h/t @jairtrejo
+; h/t jairtrejo + jimpjorps
 
 (require threading rackunit)
 
@@ -26,9 +26,12 @@
   (let [[sorted (sort lst (curry should-come-before? rules))]]
     (equal? sorted lst)))
 
-(define [extract-middle lst]
-  (list-ref lst
-            (floor ((length lst) . / . 2))))
+(define [extract-middle lst] ; h/t jimpjorps
+  (define [extract-middle_ [one-step lst] [two-step lst]]
+    (match two-step
+      [(or (list) (list _)) (first one-step)]
+      [(list* _ _ tail) (extract-middle_ (rest one-step) tail)]))
+  (extract-middle_))
 
 (define [solve-part1]
   (let [[the-rules (read-rules)] ; NOTE this must be done before `read-updates`
