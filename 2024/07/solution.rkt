@@ -43,19 +43,32 @@
 (define {solve-part1}
   (solve-it (list + *)))
 
-(define {|| a b} ; TODO optimize this?? using math ops rather than string stuff saves 20% of the time...
-  (string->number (string-append (number->string a) (number->string b))))
+(define BASE 10)
+(define {num-digits n [accumulator 0]}
+  (cond
+    [(= n 0)
+     accumulator]
+    [(< n BASE)
+     (+ accumulator 1)]
+    [else
+     (num-digits (quotient n BASE) (+ accumulator 1))]))
+
+(define {|| a b}
+  (+ b (* a (expt 10 (num-digits b)))))
 
 (define {solve-part2}
   (solve-it (list + * ||)))
 
+(check-equal? (|| 12 3456) 123456)
+(check-equal? (|| 123 456) 123456)
+(check-equal? (|| 12345 6) 123456)
 
 (printf "part 1\n")
 (check-equal? (with-input-from-file "sample.txt" solve-part1) 3749)
-(printf "sample works!\n")
+(printf "sample done...\n")
 (check-equal? (with-input-from-file "input.txt"  solve-part1) 42283209483350)
 
 (printf "part 2\n")
 (check-equal? (with-input-from-file "sample.txt" solve-part2) 11387)
-(printf "sample works!\n")
+(printf "sample done...\n")
 (check-equal? (with-input-from-file "input.txt"  solve-part2) 1026766857276279)
