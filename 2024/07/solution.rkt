@@ -19,10 +19,10 @@
          (string-split line-in ":"))))
 
 (define {checks-out? input-line operations}
-  (let [[intended-result (first input-line)]
-        [arguments (second input-line)] ]
-    (for/or [[op-sequence (generate-combinations (- (length arguments) 1)
-                                                 operations)]]
+  (let* [[intended-result (first input-line)]
+         [arguments (second input-line)]
+         [op-sequences (generate-combinations (- (length arguments) 1) operations)]]
+    (for/or [[op-sequence op-sequences]]
       (equal? intended-result
               (for/fold ([result (first arguments)])
                         ([a-value (rest arguments)]
@@ -38,6 +38,10 @@
 
 (define {solve-part1}
   (solve-it (list + *)))
+
+(printf "part 1...\n")
+(check-equal? (with-input-from-file "sample.txt" solve-part1) 3749)
+(check-equal? (with-input-from-file "input.txt"  solve-part1) 42283209483350)
 
 (define BASE 10)
 (define {num-digits n [accumulator 0]}
@@ -60,12 +64,6 @@
 (define {solve-part2}
   (solve-it (list + * ||)))
 
-(printf "part 1\n")
-(check-equal? (with-input-from-file "sample.txt" solve-part1) 3749)
-(printf "sample done...\n")
-(check-equal? (with-input-from-file "input.txt"  solve-part1) 42283209483350)
-
-(printf "part 2\n")
+(printf "part 2...\n")
 (check-equal? (with-input-from-file "sample.txt" solve-part2) 11387)
-(printf "sample done...\n")
 (check-equal? (with-input-from-file "input.txt"  solve-part2) 1026766857276279)
