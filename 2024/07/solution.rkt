@@ -1,20 +1,13 @@
 #lang racket
 
-(require rackunit)
+(require memo rackunit)
 
-(define (generate-combinations n l-o-v)                 ;; [Claude.ai wrote this function]
-  (if (= n 1)
-    (map list l-o-v)                                    ;; Base case: if n is 1, convert each value to a single-item list
-    (let loop ([current-combinations (map list l-o-v)]) ;; Recursive case: generate combination
-      (if (= (length (first current-combinations)) n)
-        current-combinations
-        (loop
-          (append-map
-            (lambda (current-combination)
-              (map
-                (lambda (value) (append current-combination (list value)))
-                l-o-v))
-            current-combinations))))))
+(define/memoize {generate-combinations n ops}
+                (apply cartesian-product (make-list n ops)))
+
+(check-equal? (generate-combinations 1 '(a b c)) '((a) (b) (c)))
+(check-equal? (generate-combinations 2 '(a b))   '((a a) (a b) (b a) (b b)))
+(check-equal? (generate-combinations 3 '(a b))   '((a a a) (a a b) (a b a) (a b b) (b a a) (b a b) (b b a) (b b b)))
 
 (define {strings->numbers test-value-and-arguments-pair}
   (list (string->number (first test-value-and-arguments-pair))
@@ -60,12 +53,12 @@
 (define {|| a b}
   (+ b (* a (expt 10 (num-digits b)))))
 
-(define {solve-part2}
-  (solve-it (list + * ||)))
-
 (check-equal? (|| 12 3456) 123456)
 (check-equal? (|| 123 456) 123456)
 (check-equal? (|| 12345 6) 123456)
+
+(define {solve-part2}
+  (solve-it (list + * ||)))
 
 (printf "part 1\n")
 (check-equal? (with-input-from-file "sample.txt" solve-part1) 3749)
