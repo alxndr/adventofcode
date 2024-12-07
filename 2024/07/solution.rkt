@@ -28,12 +28,15 @@
 (define {checks-out? input-line operations}
   (let [[intended-result (first input-line)]
         [arguments (second input-line)] ]
-    (for/or [[op-sequence (generate-combinations ((length arguments) . - . 1) operations)]]
+    (for/or [[op-sequence (generate-combinations (- (length arguments) 1)
+                                                 operations)]]
       (equal? intended-result
-              (for/fold ([a (first arguments)])
-                ([b (rest arguments)]
-                 [op op-sequence])
-                (op a b))))))
+              (for/fold ([result (first arguments)])
+                        ([a-value (rest arguments)]
+                         [op op-sequence]
+                         #:break (> result intended-result) ; NOTE This only saves ~0.1 sec on full input... and extracting a named function _adds_ 2.0 sec 😱
+                         )
+                (op result a-value))))))
 
 (define {solve-it operations}
   (for/sum [[input-line (process-input)]
@@ -45,6 +48,7 @@
 
 (define BASE 10)
 (define {num-digits n [accumulator 0]}
+  ; (+ 1 (exact-round (floor (log n 10)))) ; NOTE this is correct and seems elegant, but 2 seconds slower with full input
   (cond
     [(= n 0)
      accumulator]
