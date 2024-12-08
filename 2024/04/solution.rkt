@@ -20,16 +20,20 @@
 (define NW (make-direction -1 -1))
 (define DIRS (list NN NE EE SE SS SW WW NW))
 
+(define {word-goes-in-this-direction? chars x y dir xy}
+  (for/and [[letter chars]
+            [index (string-length chars)]]
+    (equal? (string letter)
+            (xy (+ x (* index (direction-x dir)))
+                (+ y (* index (direction-y dir)))))))
+
 (define {solve-part1}
   (let [[v (lines->vector in-lines)]]
     (define xy (curry vector-xy v))
     (define {count-words-starting-from x y}
       (for/sum [[dir DIRS]]
-        (with-handlers [[exn:fail:contract? (λ (x) 0)]]
-          (if (and (equal? "X" (xy    x                             y))
-                   (equal? "M" (xy (+ x (     direction-x dir))  (+ y      (direction-y dir))))
-                   (equal? "A" (xy (+ x (* 2 (direction-x dir))) (+ y (* 2 (direction-y dir)))))
-                   (equal? "S" (xy (+ x (* 3 (direction-x dir))) (+ y (* 3 (direction-y dir))))))
+        (with-handlers [[exn:fail:contract? (λ (x) 0)]] ; trying to look for a word that goes off the square
+          (if (word-goes-in-this-direction? "XMAS" x y dir xy)
             1
             0))))
     (for*/fold ; for*/fold is the Cartesian product version of for/fold
@@ -38,11 +42,11 @@
        [x (vector-length (vector-ref v y))]]
       (+ sum (count-words-starting-from x y)))))
 
-(define {solve-part2}
-  'TODO)
-
 (check-equal? (with-input-from-file "sample.txt" solve-part1) 18)
 (check-equal? (with-input-from-file "input.txt"  solve-part1) 2685)
 
-#; (check-equal? (with-input-from-file "sample.txt" solve-part2) 'TODO)
-#; (check-equal? (with-input-from-file "input.txt"  solve-part2) 'TODO)
+(define {solve-part2}
+  'TODO)
+
+#; (check-equal? (with-input-from-file "sample.txt" solve-part2) 9)
+#; (check-equal? (with-input-from-file "input.txt"  solve-part2) 2048)
