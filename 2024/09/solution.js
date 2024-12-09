@@ -8,29 +8,53 @@ function* inputChar(input) { // this probably does not need to be a generator...
     yield {i, digit: Number(trimmedInput[i])}
 }
 
-const FREE = 'free'
-const FILE = 'file'
-
-function blockObjToString(block) {
-  return Array(block.length).fill(block.type === FREE ? '.' : block.id).join('')
+class FileBlock {
+  length
+  id
+  constructor(length, id) {
+    this.id = id
+    this.length = length
+  }
+  isFreeSpace() {
+    return false
+  }
+  toString() {
+    return Array(this.length).fill(this.id).join('')
+  }
+  inspect() {
+    return `File (${this.length}) #${this.id}`
+  }
+}
+class FreeBlock {
+  length
+  constructor(length) {
+    this.length = length
+  }
+  isFreeSpace() {
+    return true
+  }
+  toString() {
+    return Array(this.length).fill('.').join('')
+  }
+  inspect() {
+    return `Free (${this.length})`
+  }
 }
 
 function blocksToString(blocks) {
-  return blocks.reduce((str, elem) => {
-    return str + blockObjToString(elem)
+  return blocks.reduce((str, block) => {
+    return str + block.toString()
   }, '')
 }
 
 function diskmapToArray(str) {
   const blocks = Array()
-  let fileId = -1
+  let fileId = 0
   for (const {i, digit} of inputChar(str)) {
-    let which
     if (i % 2) {
-      blocks.push({type: FREE, length: digit})
+      blocks.push(new FreeBlock(digit))
     } else {
-      fileId++
-      blocks.push({type: FILE, length: digit, id: fileId})
+      blocks.push(new FileBlock(digit, fileId++))
     }
   }
   return blocks
@@ -42,7 +66,7 @@ function sumConsecutive(a, b) {
 
 function calculateChecksum(blocks) {
   return blocks.reduce(({checksum, index}, block) => {
-    if (block.type !== FILE)
+    if (block.isFreeSpace())
       throw new Error('ruh roh, should be no free spaces when calculating checksum')
     return {
       checksum: checksum + block.id * sumConsecutive(index, index + block.length - 1),
@@ -51,13 +75,14 @@ function calculateChecksum(blocks) {
 }
 
 function blockIsFreeSpace(block) {
-  return block.type === FREE
+  return block.isFreeSpace()
 }
 
 function doDefrag(blocks) {
+  // console.log(blocks.map(b => b.toString()).join(''))
   const blocksLength = blocks.length
   const lastBlock = blocks[blocksLength - 1]
-  if (lastBlock.type === FREE)
+  if (lastBlock.isFreeSpace())
     return doDefrag(blocks.slice(0, blocksLength - 1))
   // lastBlock is a file...
   const nextFreeSpaceIndex = blocks.findIndex(blockIsFreeSpace)
@@ -77,7 +102,7 @@ function doDefrag(blocks) {
           nextFreeBlock,
           blocks.slice(nextFreeSpaceIndex + 1, blocksLength - 1)))
   } else {
-    const partOfLastBlock = {...lastBlock, length: nextFreeBlock.length}
+    const partOfLastBlock = new FileBlock(nextFreeBlock.length, lastBlock.id)
     lastBlock.length -= nextFreeBlock.length
     return doDefrag(
       blocks.slice(0, nextFreeSpaceIndex)
@@ -103,14 +128,21 @@ const sampleInput = fs.readFileSync('./sample.txt', 'utf8')
 const fullInput = fs.readFileSync('./input.txt', 'utf8')
 
 test('part 1', () => {
-  expect(blocksToString([{type:FILE,length:1,id:0}])).toEqual('0')
-  expect(blocksToString([{type:FILE,length:1,id:0}, {type:FREE,length:2}, {type:FILE,length:3,id:1}])).toEqual('0..111')
-  expect(blocksToString(diskmapToArray('12345'))).toEqual('0..111....22222')
-  expect(blocksToString(doDefrag([
-    {type:FILE,length:2,id:0},
-    {type:FREE,length:5},
-    {type:FILE,length:3,id:1}]))).toEqual('00111')
-  expect(blocksToString(doDefrag(diskmapToArray('12345')))).toEqual('022111222')
+  expect(blocksToString([new FileBlock(1,0)])).toEqual('0')
+  expect(blocksToString([new FileBlock(1,0), new FreeBlock(2), new FileBlock(3,1)])).toEqual('0..111')
+  expect(blocksToString(
+    diskmapToArray('12345')
+  )).toEqual('0..111....22222')
+  expect(blocksToString(
+    doDefrag([
+      new FileBlock(2,0),
+      new FreeBlock(5),
+      new FileBlock(3,1)
+    ])
+  )).toEqual('00111')
+  expect(blocksToString(
+    doDefrag(diskmapToArray('12345'))
+  )).toEqual('022111222')
   expect(calculateChecksum(doDefrag(diskmapToArray('12345')))).toEqual(60)
   expect(part1('12345')).toEqual(60)
   expect(part1(sampleInput)).toEqual(1928)
