@@ -1,9 +1,6 @@
 import fs from 'fs'
 import {expect, test} from 'bun:test'
 
-const sampleInput = fs.readFileSync('./sample.txt', 'utf8')
-const fullInput = fs.readFileSync('./input.txt', 'utf8')
-
 function* inputChar(input) { // this probably does not need to be a generator...
   const trimmedInput = input.trim()
   const inputLength = trimmedInput.length
@@ -44,28 +41,13 @@ function sumConsecutive(a, b) {
 }
 
 function calculateChecksum(blocks) {
-  // console.log('calculate checksum...', blocks)
   return blocks.reduce(({checksum, index}, block) => {
-    // console.log({index, checksum, id: block.id, length: block.length})
     if (block.type !== FILE)
-      throw new Error('ruh roh, sholud be no free spaces when calculating checksum')
-    // id * (index * (sC(index + length) - sC(index - 1))
-    // (@0) 0 * 0
-    // (@1) 2 * 1 + 2 * 2          => 2 * 3   =>  6
-    // (@3) 1 * 3 + 1 * 4 + 1 * 5  => 1 * 12  => 12
-    // (@6) 2 * 6 + 2 * 7 + 2 * 8  => 2 * 21  => 42
+      throw new Error('ruh roh, should be no free spaces when calculating checksum')
     return {
       checksum: checksum + block.id * sumConsecutive(index, index + block.length - 1),
       index: index + block.length}
   }, {checksum: 0, index: 0}).checksum
-}
-
-function part1(input) {
-  const blocks = diskmapToArray(input)
-  // console.log(blocksToString(blocks))
-  const defragged = doDefrag(blocks)
-  // console.log({defragged})
-  return calculateChecksum(defragged)
 }
 
 function blockIsFreeSpace(block) {
@@ -73,7 +55,6 @@ function blockIsFreeSpace(block) {
 }
 
 function doDefrag(blocks) {
-  // console.log(blocks)
   const blocksLength = blocks.length
   const lastBlock = blocks[blocksLength - 1]
   if (lastBlock.type === FREE)
@@ -83,18 +64,12 @@ function doDefrag(blocks) {
   if (nextFreeSpaceIndex === -1)
     return blocks
   const nextFreeBlock = blocks[nextFreeSpaceIndex]
-  // console.log('next free length:', nextFreeBlock.length, '@', nextFreeSpaceIndex)
   if (nextFreeBlock.length === lastBlock.length) {
     return doDefrag(
       blocks.slice(0, nextFreeSpaceIndex)
         .concat(lastBlock, blocks.slice(nextFreeSpaceIndex + 1, blocksLength - 1)))
   } else if (nextFreeBlock.length > lastBlock.length) {
     nextFreeBlock.length -= lastBlock.length
-    // console.log('okay is this right??',
-    //   blocks.slice(0, nextFreeSpaceIndex),
-    //   lastBlock,
-    //   nextFreeBlock,
-    //   blocks.slice(nextFreeSpaceIndex + 1, blocksLength - 1))
     return doDefrag(
       blocks.slice(0, nextFreeSpaceIndex)
         .concat(
@@ -112,6 +87,20 @@ function doDefrag(blocks) {
         lastBlock))
   }
 }
+
+function part1(input) {
+  const blocks = diskmapToArray(input)
+  const defragged = doDefrag(blocks)
+  return calculateChecksum(defragged)
+}
+
+test('sumConsecutive', () => {
+  expect(sumConsecutive(2, 4)).toEqual(2 + 3 + 4)
+  expect(sumConsecutive(3, 7)).toEqual(3 + 4 + 5 + 6 + 7)
+})
+
+const sampleInput = fs.readFileSync('./sample.txt', 'utf8')
+const fullInput = fs.readFileSync('./input.txt', 'utf8')
 
 test('part 1', () => {
   expect(blocksToString([{type:FILE,length:1,id:0}])).toEqual('0')
