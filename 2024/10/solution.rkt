@@ -45,8 +45,7 @@
   ; trail score is: how many 9-values (not paths) can be found starting from here?
   ; 9-values are unique per starting-point but not per-path...
   ; path is: value increasing by 1 each step
-  (define walked (walk-paths xy mtx (list)))
-  (set-count (list->set walked))) ; this is a silly way to uniq the list of results...
+  (set-count (list->set (walk-paths xy mtx (list))))) ; this is a silly way to uniq the list of results...
 
 (define {solve-part1}
   (let [[vec-matrix (process-input)]]
@@ -58,6 +57,27 @@
           (+ total-score (get-trail-score-for xy vec-matrix))
           total-score)))))
 
+(define {get-trail-rating-for xy mtx}
+  ; xy is trailhead (0-value)...
+  ; trail _rating_ is: how many unique paths to all 9-values can be found starting from here?
+  ; path is still: value increasing by 1 each step
+  (define walked (walk-paths xy mtx (list)))
+  (length walked)) ; this is a silly way to uniq the list of results...
+
+(define {solve-part2}
+  (let [[vec-matrix (process-input)]]
+    (for*/fold [[total-ratings 0]]
+               [[y (vector-length vec-matrix)]
+                [x (vector-length (vector-ref vec-matrix 0))]]
+      (let [[xy (make-rectangular x y)]]
+        (if (equal? 0 (get-value-at xy vec-matrix))
+          (+ total-ratings (get-trail-rating-for xy vec-matrix))
+          total-ratings)))))
+
 (printf "part 1...\n")
 (check-equal? (with-input-from-file "sample.txt" solve-part1) 36)
 (check-equal? (with-input-from-file "input.txt"  solve-part1) 754)
+
+(printf "part 2...\n")
+(check-equal? (with-input-from-file "sample.txt" solve-part2) 81)
+(check-equal? (with-input-from-file "input.txt"  solve-part2) 1609)
