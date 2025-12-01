@@ -1,35 +1,15 @@
 #lang racket
 
-(require "../advent-of-code-utils.rkt" rackunit rackunit/text-ui)
+(require rackunit)
 
-(define (solve-part1 input)
+(define (solve-part1)
   'TODO)
 
-(define (solve-part2 input)
+(define (solve-part2)
   'TODO)
 
-(run-tests
-  (test-suite "2024 day #"
+(check-equal? (with-input-from-file "sample.txt" solve-part1) 'TODO)
+#; (check-equal? (with-input-from-file "input.txt"  solve-part1) 'TODO)
 
-    (test-suite "part 1"
-      (test-case "sample input"
-        (check-equal?
-          (solve-part1 (extract-and-split (sample-input)))
-          'TODO))
-      #; (test-case "full input"
-        (check-equal?
-          (solve-part1 (extract-and-split (full-input)))
-          'TODO)))
-
-    #; (test-suite "part 2"
-      (test-case "sample input"
-        (check-equal?
-          (solve-part2 (extract-and-split (sample-input)))
-          'TODO))
-      (test-case "full input"
-        (check-equal?
-          (solve-part2 (extract-and-split (full-input)))
-          'TODO)))
-
-  )
-)
+#; (check-equal? (with-input-from-file "sample.txt" solve-part2) 'TODO)
+#; (check-equal? (with-input-from-file "input.txt"  solve-part2) 'TODO)

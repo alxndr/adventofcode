@@ -9,6 +9,19 @@
 (check-equal? (generate-combinations 2 '(a b))   '((a a) (a b) (b a) (b b)))
 (check-equal? (generate-combinations 3 '(a b))   '((a a a) (a a b) (a b a) (a b b) (b a a) (b a b) (b b a) (b b b)))
 
+(define {gen-cxns-cc n ops}
+  (λ ()
+  (call/cc (λ (continue)
+             (let [[combination #f]]
+               (continue combination))
+             ))))
+
+(let [[test-gen-cxns-cc (gen-cxns-cc 4 '(a b c d))]]
+  (check-equal? (test-gen-cxns-cc) '(a a a a))
+  (check-equal? (test-gen-cxns-cc) '(a a a b))
+  (check-equal? (test-gen-cxns-cc) '(a a a c))
+  )
+
 (define {strings->numbers test-value-and-arguments-pair}
   (list (string->number (first test-value-and-arguments-pair))
         (map string->number
@@ -24,10 +37,12 @@
          [op-sequences (generate-combinations (- (length arguments) 1) operations)]]
     (for/or [[op-sequence op-sequences]]
       (equal? intended-result
-              (for/fold ([result (first arguments)])
-                        ([a-value (rest arguments)]
-                         [op op-sequence]
+              (for/fold ([result (first arguments)]
+                         )
+                        (
                          #:break (> result intended-result) ; NOTE This only saves ~0.1 sec on full input... and extracting a named function _adds_ 2.0 sec 😱
+                         [a-value (rest arguments)]
+                         [op op-sequence]
                          )
                 (op result a-value))))))
 
